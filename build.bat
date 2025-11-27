@@ -6,6 +6,18 @@ echo    BTK Sorgu Go - Build Script
 echo ============================================
 echo.
 
+:: Go path kontrolü - eğer PATH'te yoksa varsayılan konumu kullan
+where go >nul 2>nul
+if %errorlevel% neq 0 (
+    if exist "C:\Program Files\Go\bin\go.exe" (
+        set "PATH=C:\Program Files\Go\bin;%PATH%"
+        echo [INFO] Go PATH'e eklendi: C:\Program Files\Go\bin
+    ) else (
+        echo [HATA] Go bulunamadi! Lutfen Go'yu yukleyin.
+        exit /b 1
+    )
+)
+
 :: Build klasörünü oluştur
 if not exist "build" mkdir build
 
