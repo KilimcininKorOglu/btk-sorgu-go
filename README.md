@@ -194,7 +194,3 @@ BTK_BLOCKED_IPS=195.175.254.2,2a01:358:4014:a00::3
 3. **Engel Türleri**: Bu yöntem sadece DNS bazlı engelleri tespit eder. IP/SNI bazlı engeller bu yöntemle tespit edilemez.
 
 4. **Timeout**: BTK DNS sunucularına erişilemezse timeout hatası alınabilir (5 saniye).
-
-## 📄 Lisans
-
-MIT License
