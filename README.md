@@ -75,23 +75,12 @@ curl "http://localhost:8080/check?domain=discord.com"
   "timestamp": 1764196530,
   "success": true,
   "is_blocked": true,
-  "method": "dns_turkey",
   "dns_server": "195.175.39.40",
   "resolved_ips": ["195.175.254.2"],
   "blocked_ip": "195.175.254.2",
-  "data": {
-    "query_time": "01:35:30.077",
-    "response_time": "8.09173ms",
-    "record_type": "A",
-    "all_ips": ["195.175.254.2"],
-    "is_blocked_ip": true,
-    "source": "my-server"
-  },
-  "api_info": {
-    "processing_time": 0.008820954,
-    "method": "dns_turkey",
-    "server_location": "Turkey_VDS"
-  }
+  "query_time": "01:35:30.077",
+  "response_time_ms": 8.09,
+  "server_location": "Turkey_VDS"
 }
 ```
 
@@ -103,22 +92,11 @@ curl "http://localhost:8080/check?domain=discord.com"
   "timestamp": 1764196530,
   "success": true,
   "is_blocked": false,
-  "method": "dns_turkey",
   "dns_server": "195.175.39.39",
   "resolved_ips": ["142.250.185.238"],
-  "data": {
-    "query_time": "01:35:30.077",
-    "response_time": "5.123456ms",
-    "record_type": "A",
-    "all_ips": ["142.250.185.238"],
-    "is_blocked_ip": false,
-    "source": "my-server"
-  },
-  "api_info": {
-    "processing_time": 0.005123456,
-    "method": "dns_turkey",
-    "server_location": "Turkey_VDS"
-  }
+  "query_time": "01:35:30.077",
+  "response_time_ms": 5.12,
+  "server_location": "Turkey_VDS"
 }
 ```
 

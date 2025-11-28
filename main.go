@@ -143,36 +143,19 @@ func watchConfigFile() {
 	}
 }
 
-// DNSResponse API response yapısı
+// DNSResponse API response yapısı (sadeleştirilmiş, tekrarsız)
 type DNSResponse struct {
-	Domain      string   `json:"domain"`
-	Timestamp   int64    `json:"timestamp"`
-	Success     bool     `json:"success"`
-	IsBlocked   bool     `json:"is_blocked"`
-	Method      string   `json:"method"`
-	DNSServer   string   `json:"dns_server"`
-	ResolvedIPs []string `json:"resolved_ips"`
-	BlockedIP   string   `json:"blocked_ip,omitempty"`
-	Error       string   `json:"error,omitempty"`
-	Data        *DNSData `json:"data,omitempty"`
-	APIInfo     *APIInfo `json:"api_info,omitempty"`
-}
-
-// DNSData detaylı DNS bilgileri
-type DNSData struct {
-	QueryTime    string   `json:"query_time"`
-	ResponseTime string   `json:"response_time"`
-	RecordType   string   `json:"record_type"`
-	AllIPs       []string `json:"all_ips"`
-	IsBlockedIP  bool     `json:"is_blocked_ip"`
-	Source       string   `json:"source"`
-}
-
-// APIInfo API meta bilgileri
-type APIInfo struct {
-	ProcessingTime float64 `json:"processing_time"`
-	Method         string  `json:"method"`
-	ServerLocation string  `json:"server_location"`
+	Domain         string   `json:"domain"`
+	Timestamp      int64    `json:"timestamp"`
+	Success        bool     `json:"success"`
+	IsBlocked      bool     `json:"is_blocked"`
+	DNSServer      string   `json:"dns_server,omitempty"`
+	ResolvedIPs    []string `json:"resolved_ips,omitempty"`
+	BlockedIP      string   `json:"blocked_ip,omitempty"`
+	Error          string   `json:"error,omitempty"`
+	QueryTime      string   `json:"query_time,omitempty"`
+	ResponseTimeMs float64  `json:"response_time_ms,omitempty"`
+	ServerLocation string   `json:"server_location,omitempty"`
 }
 
 // checkDomain belirtilen domain'in BTK tarafından engellenip engellenmediğini kontrol eder
@@ -181,7 +164,6 @@ func checkDomain(domain string) DNSResponse {
 	response := DNSResponse{
 		Domain:    domain,
 		Timestamp: time.Now().Unix(),
-		Method:    "dns_turkey",
 	}
 
 	// Domain validasyonu
@@ -234,21 +216,10 @@ func checkDomain(domain string) DNSResponse {
 
 	processingTime := time.Since(startTime)
 
-	// Detaylı veri
-	response.Data = &DNSData{
-		QueryTime:    time.Now().Format("15:04:05.000"),
-		ResponseTime: processingTime.String(),
-		RecordType:   "A",
-		AllIPs:       resolvedIPs,
-		IsBlockedIP:  isBlocked,
-		Source:       getSource(),
-	}
-
-	response.APIInfo = &APIInfo{
-		ProcessingTime: processingTime.Seconds(),
-		Method:         "dns_turkey",
-		ServerLocation: config.GetServerLocation(),
-	}
+	// Ek bilgiler
+	response.QueryTime = time.Now().Format("15:04:05.000")
+	response.ResponseTimeMs = float64(processingTime.Microseconds()) / 1000.0
+	response.ServerLocation = config.GetServerLocation()
 
 	return response
 }
@@ -303,14 +274,7 @@ func cleanDomain(domain string) string {
 	return domain
 }
 
-// getSource sunucu kaynağını döndürür
-func getSource() string {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "unknown"
-	}
-	return hostname
-}
+
 
 // handleCheck /check endpoint handler'ı
 func handleCheck(w http.ResponseWriter, r *http.Request) {
