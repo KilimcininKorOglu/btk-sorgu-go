@@ -339,6 +339,11 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 
 	response := checkDomain(domain)
 
+	// Hata durumunda uygun HTTP status code
+	if !response.Success {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("JSON encode hatası: %v", err)
 	}
