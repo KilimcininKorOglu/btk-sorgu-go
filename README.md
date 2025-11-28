@@ -18,7 +18,7 @@ BTK, engellediği sitelerin DNS sorgularını `195.175.254.2` IP adresine yönle
 
 ```bash
 # Repository'yi klonla
-git clone https://github.com/btk-sorgu-go.git
+git clone https://github.com/KilimcininKorOglu/btk-sorgu-go.git
 cd btk-sorgu-go
 
 # Çalıştır
@@ -32,20 +32,25 @@ go build -o btk-sorgu-go
 ## 🌐 API Endpoint'leri
 
 ### GET /
+
 API bilgilerini döndürür.
 
 ### GET /check?domain={domain}
+
 Domain'in engel durumunu kontrol eder.
 
 **Parametreler:**
+
 - `domain` (required): Kontrol edilecek domain (örn: discord.com)
 
 **Örnek İstek:**
+
 ```bash
 curl "http://localhost:8080/check?domain=discord.com"
 ```
 
 **Örnek Response (Engelli Site):**
+
 ```json
 {
   "domain": "discord.com",
@@ -73,6 +78,7 @@ curl "http://localhost:8080/check?domain=discord.com"
 ```
 
 **Örnek Response (Engelsiz Site):**
+
 ```json
 {
   "domain": "google.com",
@@ -99,6 +105,7 @@ curl "http://localhost:8080/check?domain=discord.com"
 ```
 
 ### GET /health
+
 API sağlık durumunu kontrol eder.
 
 ```json
@@ -121,6 +128,7 @@ API sağlık durumunu kontrol eder.
 1. **Sunucu Lokasyonu**: Bu API'nin doğru çalışması için sunucunun Türkiye IP bloklarında olması gerekir.
 
 2. **DNS Yönlendirmesi**: Sunucunun DNS'i BTK DNS sunucularına yönlendirilmelidir:
+
    ```bash
    sudo resolvectl dns ens32 195.175.39.39 195.175.39.40
    ```
