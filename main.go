@@ -128,9 +128,6 @@ func watchConfigFile() {
 			lastModTime = info.ModTime()
 			log.Println("🔄 .env dosyası değişti, konfigürasyon yeniden yükleniyor...")
 
-			// Env cache'i temizle
-			os.Clearenv()
-
 			if err := config.loadConfig(); err != nil {
 				log.Printf("⚠️ Konfigürasyon yükleme hatası: %v", err)
 			} else {
