@@ -8,9 +8,11 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -393,10 +395,35 @@ func main() {
 		port = "8080"
 	}
 
-	http.HandleFunc("/", handleRoot)
-	http.HandleFunc("/check", handleCheck)
-	http.HandleFunc("/health", handleHealth)
-	http.HandleFunc("/config", handleConfig)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handleRoot)
+	mux.HandleFunc("/check", handleCheck)
+	mux.HandleFunc("/health", handleHealth)
+	mux.HandleFunc("/config", handleConfig)
+
+	server := &http.Server{
+		Addr:         ":" + port,
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	// Graceful shutdown için signal handling
+	go func() {
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		<-sigChan
+
+		log.Println("🛑 Kapatma sinyali alındı, graceful shutdown başlatılıyor...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		if err := server.Shutdown(ctx); err != nil {
+			log.Printf("⚠️ Graceful shutdown hatası: %v", err)
+		}
+	}()
 
 	log.Println("🚀 BTK Engel Kontrol API başlatıldı")
 	log.Printf("📡 Dinleniyor: http://localhost:%s", port)
@@ -407,7 +434,9 @@ func main() {
 	log.Printf("   Blocked IPs: %v", config.GetBlockedIPs())
 	log.Printf("   Server Location: %s", config.GetServerLocation())
 
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Sunucu başlatılamadı: %v", err)
 	}
+
+	log.Println("✅ Sunucu başarıyla kapatıldı")
 }
