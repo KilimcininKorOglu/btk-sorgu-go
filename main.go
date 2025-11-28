@@ -9,34 +9,153 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
-// BTK DNS sunucuları
-var btkDNSServers = []string{
-	"195.175.39.39:53",
-	"195.175.39.40:53",
+// Config uygulama konfigürasyonu (hot-reload destekli)
+type Config struct {
+	mu             sync.RWMutex
+	DNSServers     []string
+	BlockedIPs     []string
+	ServerLocation string
 }
 
-// BTK engel sayfası IP adresleri
-var blockedIPs = []string{
-	"195.175.254.2",
-	"2a01:358:4014:a00::3",
+// Global config instance
+var config = &Config{
+	DNSServers:     []string{"195.175.39.39:53", "195.175.39.40:53"},
+	BlockedIPs:     []string{"195.175.254.2", "2a01:358:4014:a00::3"},
+	ServerLocation: "Unknown",
+}
+
+// GetDNSServers thread-safe DNS sunucu listesi
+func (c *Config) GetDNSServers() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	result := make([]string, len(c.DNSServers))
+	copy(result, c.DNSServers)
+	return result
+}
+
+// GetBlockedIPs thread-safe engelli IP listesi
+func (c *Config) GetBlockedIPs() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	result := make([]string, len(c.BlockedIPs))
+	copy(result, c.BlockedIPs)
+	return result
+}
+
+// GetServerLocation thread-safe sunucu lokasyonu
+func (c *Config) GetServerLocation() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.ServerLocation
+}
+
+// loadConfig .env dosyasından konfigürasyonu yükler
+func (c *Config) loadConfig() error {
+	// .env dosyasını yükle (varsa)
+	_ = godotenv.Load()
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// DNS Sunucuları
+	if dnsServers := os.Getenv("BTK_DNS_SERVERS"); dnsServers != "" {
+		servers := parseCommaSeparated(dnsServers)
+		if len(servers) > 0 {
+			// Port ekle (yoksa)
+			for i, server := range servers {
+				if !strings.Contains(server, ":") {
+					servers[i] = server + ":53"
+				}
+			}
+			c.DNSServers = servers
+		}
+	}
+
+	// Engelli IP'ler
+	if blockedIPs := os.Getenv("BTK_BLOCKED_IPS"); blockedIPs != "" {
+		ips := parseCommaSeparated(blockedIPs)
+		if len(ips) > 0 {
+			c.BlockedIPs = ips
+		}
+	}
+
+	// Sunucu Lokasyonu (boşlukları alt çizgiye çevir)
+	if location := os.Getenv("SERVER_LOCATION"); location != "" {
+		c.ServerLocation = strings.ReplaceAll(location, " ", "_")
+	}
+
+	return nil
+}
+
+// parseCommaSeparated virgülle ayrılmış string'i slice'a çevirir
+func parseCommaSeparated(s string) []string {
+	var result []string
+	for _, item := range strings.Split(s, ",") {
+		item = strings.TrimSpace(item)
+		if item != "" {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+// watchConfigFile .env dosyasını izler ve değişikliklerde yeniden yükler
+func watchConfigFile() {
+	envFile := ".env"
+	var lastModTime time.Time
+
+	// İlk mod time'ı al
+	if info, err := os.Stat(envFile); err == nil {
+		lastModTime = info.ModTime()
+	}
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		info, err := os.Stat(envFile)
+		if err != nil {
+			continue
+		}
+
+		if info.ModTime().After(lastModTime) {
+			lastModTime = info.ModTime()
+			log.Println("🔄 .env dosyası değişti, konfigürasyon yeniden yükleniyor...")
+
+			// Env cache'i temizle
+			os.Clearenv()
+
+			if err := config.loadConfig(); err != nil {
+				log.Printf("⚠️ Konfigürasyon yükleme hatası: %v", err)
+			} else {
+				log.Printf("✅ Konfigürasyon güncellendi:")
+				log.Printf("   DNS Servers: %v", config.GetDNSServers())
+				log.Printf("   Blocked IPs: %v", config.GetBlockedIPs())
+				log.Printf("   Server Location: %s", config.GetServerLocation())
+			}
+		}
+	}
 }
 
 // DNSResponse API response yapısı
 type DNSResponse struct {
-	Domain      string            `json:"domain"`
-	Timestamp   int64             `json:"timestamp"`
-	Success     bool              `json:"success"`
-	IsBlocked   bool              `json:"is_blocked"`
-	Method      string            `json:"method"`
-	DNSServer   string            `json:"dns_server"`
-	ResolvedIPs []string          `json:"resolved_ips"`
-	BlockedIP   string            `json:"blocked_ip,omitempty"`
-	Error       string            `json:"error,omitempty"`
-	Data        *DNSData          `json:"data,omitempty"`
-	APIInfo     *APIInfo          `json:"api_info,omitempty"`
+	Domain      string   `json:"domain"`
+	Timestamp   int64    `json:"timestamp"`
+	Success     bool     `json:"success"`
+	IsBlocked   bool     `json:"is_blocked"`
+	Method      string   `json:"method"`
+	DNSServer   string   `json:"dns_server"`
+	ResolvedIPs []string `json:"resolved_ips"`
+	BlockedIP   string   `json:"blocked_ip,omitempty"`
+	Error       string   `json:"error,omitempty"`
+	Data        *DNSData `json:"data,omitempty"`
+	APIInfo     *APIInfo `json:"api_info,omitempty"`
 }
 
 // DNSData detaylı DNS bilgileri
@@ -80,8 +199,8 @@ func checkDomain(domain string) DNSResponse {
 	var resolvedIPs []string
 	var usedServer string
 
-	// BTK DNS sunucularını dene
-	for _, dnsServer := range btkDNSServers {
+	// BTK DNS sunucularını dene (config'den al)
+	for _, dnsServer := range config.GetDNSServers() {
 		ips, err := resolveDNS(domain, dnsServer)
 		if err != nil {
 			lastError = err
@@ -106,8 +225,8 @@ func checkDomain(domain string) DNSResponse {
 	response.DNSServer = strings.TrimSuffix(usedServer, ":53")
 	response.ResolvedIPs = resolvedIPs
 
-	// Engel kontrolü
-	isBlocked, blockedIP := checkIfBlocked(resolvedIPs)
+	// Engel kontrolü (config'den al)
+	isBlocked, blockedIP := checkIfBlocked(resolvedIPs, config.GetBlockedIPs())
 	response.IsBlocked = isBlocked
 	if isBlocked {
 		response.BlockedIP = blockedIP
@@ -128,7 +247,7 @@ func checkDomain(domain string) DNSResponse {
 	response.APIInfo = &APIInfo{
 		ProcessingTime: processingTime.Seconds(),
 		Method:         "dns_turkey",
-		ServerLocation: getServerLocation(),
+		ServerLocation: config.GetServerLocation(),
 	}
 
 	return response
@@ -149,7 +268,6 @@ func resolveDNS(domain, dnsServer string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// A kayıtlarını çözümle
 	ips, err := resolver.LookupHost(ctx, domain)
 	if err != nil {
 		return nil, err
@@ -159,7 +277,7 @@ func resolveDNS(domain, dnsServer string) ([]string, error) {
 }
 
 // checkIfBlocked IP listesinde BTK engel IP'si var mı kontrol eder
-func checkIfBlocked(ips []string) (bool, string) {
+func checkIfBlocked(ips []string, blockedIPs []string) (bool, string) {
 	for _, ip := range ips {
 		for _, blockedIP := range blockedIPs {
 			if ip == blockedIP {
@@ -177,12 +295,11 @@ func cleanDomain(domain string) string {
 	domain = strings.TrimPrefix(domain, "https://")
 	domain = strings.TrimPrefix(domain, "www.")
 	domain = strings.TrimSuffix(domain, "/")
-	
-	// Path varsa kaldır
+
 	if idx := strings.Index(domain, "/"); idx != -1 {
 		domain = domain[:idx]
 	}
-	
+
 	return domain
 }
 
@@ -193,16 +310,6 @@ func getSource() string {
 		return "unknown"
 	}
 	return hostname
-}
-
-// getServerLocation sunucu lokasyonunu döndürür
-func getServerLocation() string {
-	// Gerçek uygulamada bu değer config'den alınabilir
-	location := os.Getenv("SERVER_LOCATION")
-	if location == "" {
-		return "Unknown"
-	}
-	return location
 }
 
 // handleCheck /check endpoint handler'ı
@@ -217,15 +324,14 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Domain parametresini al
 	domain := r.URL.Query().Get("domain")
-	if domain == "" {
-		// POST body'den de dene
-		if r.Method == "POST" {
-			var req struct {
-				Domain string `json:"domain"`
-			}
-			if err := json.NewDecoder(r.Body).Decode(&req); err == nil {
+
+	if r.Method == "POST" {
+		var req struct {
+			Domain string `json:"domain"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err == nil {
+			if domain == "" {
 				domain = req.Domain
 			}
 		}
@@ -249,6 +355,17 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// handleConfig /config endpoint handler'ı - güncel konfigürasyonu gösterir
+func handleConfig(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"dns_servers":     config.GetDNSServers(),
+		"blocked_ips":     config.GetBlockedIPs(),
+		"server_location": config.GetServerLocation(),
+		"hot_reload":      true,
+	})
+}
+
 // handleRoot / endpoint handler'ı
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -259,13 +376,28 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		"endpoints": map[string]string{
 			"GET /check?domain={domain}": "Domain engel durumunu kontrol et",
 			"GET /health":                "API sağlık durumu",
+			"GET /config":                "Güncel konfigürasyonu görüntüle",
 		},
-		"dns_servers": btkDNSServers,
-		"blocked_ips": blockedIPs,
+		"dns_servers": config.GetDNSServers(),
+		"blocked_ips": config.GetBlockedIPs(),
+		"features": map[string]interface{}{
+			"hot_reload":         true,
+			"config_file":        ".env",
+			"reload_interval_ms": 2000,
+		},
 	})
 }
 
 func main() {
+	// Konfigürasyonu yükle
+	if err := config.loadConfig(); err != nil {
+		log.Printf("⚠️ Konfigürasyon yükleme hatası: %v", err)
+	}
+
+	// Hot-reload için file watcher başlat
+	go watchConfigFile()
+
+	// Port (sadece başlangıçta okunur, hot-reload desteklemez)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -274,10 +406,16 @@ func main() {
 	http.HandleFunc("/", handleRoot)
 	http.HandleFunc("/check", handleCheck)
 	http.HandleFunc("/health", handleHealth)
+	http.HandleFunc("/config", handleConfig)
 
-	log.Printf("🚀 BTK Engel Kontrol API başlatıldı")
+	log.Println("🚀 BTK Engel Kontrol API başlatıldı")
 	log.Printf("📡 Dinleniyor: http://localhost:%s", port)
-	log.Printf("📋 Endpoint: GET /check?domain=example.com")
+	log.Println("📋 Endpoint: GET /check?domain=example.com")
+	log.Println("🔄 Hot-reload: .env dosyası değişikliklerini otomatik algılar")
+	log.Printf("⚙️  Konfigürasyon:")
+	log.Printf("   DNS Servers: %v", config.GetDNSServers())
+	log.Printf("   Blocked IPs: %v", config.GetBlockedIPs())
+	log.Printf("   Server Location: %s", config.GetServerLocation())
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Sunucu başlatılamadı: %v", err)
