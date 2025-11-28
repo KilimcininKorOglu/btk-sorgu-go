@@ -291,10 +291,20 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Domain string `json:"domain"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err == nil {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			// JSON parse hatası - kullanıcıya bildir
 			if domain == "" {
-				domain = req.Domain
+				response := DNSResponse{
+					Timestamp: time.Now().Unix(),
+					Success:   false,
+					Error:     "Geçersiz JSON formatı: " + err.Error(),
+				}
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(response)
+				return
 			}
+		} else if domain == "" {
+			domain = req.Domain
 		}
 	}
 
