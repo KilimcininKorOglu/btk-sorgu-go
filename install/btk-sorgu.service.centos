@@ -1,0 +1,31 @@
+[Unit]
+Description=BTK Engel Kontrol API
+Documentation=https://github.com/KilimcininKorOglu/btk-sorgu-go
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nobody
+Group=nobody
+WorkingDirectory=/opt/btk-sorgu-go
+ExecStart=/opt/btk-sorgu-go/btk-sorgu-linux-amd64
+Restart=always
+RestartSec=5
+
+# Environment
+EnvironmentFile=/opt/btk-sorgu-go/.env
+
+# Security hardening (CentOS/RHEL 7+ compatible)
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=btk-sorgu
+
+[Install]
+WantedBy=multi-user.target

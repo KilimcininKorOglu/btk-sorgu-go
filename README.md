@@ -159,6 +159,60 @@ BTK_BLOCKED_IPS=195.175.254.2,2a01:358:4014:a00::3
    Server Location: Turkey_VDS
 ```
 
+## 🐧 Linux Servis Kurulumu (systemd)
+
+`install/` klasöründe Ubuntu ve CentOS için hazır systemd dosyaları bulunur.
+
+### Ubuntu / Debian
+
+```bash
+# Binary ve config'i kopyala
+sudo mkdir -p /opt/btk-sorgu-go
+sudo cp build/btk-sorgu-linux-amd64 /opt/btk-sorgu-go/
+sudo cp .env.example /opt/btk-sorgu-go/.env
+sudo chmod +x /opt/btk-sorgu-go/btk-sorgu-linux-amd64
+
+# .env dosyasını düzenle
+sudo nano /opt/btk-sorgu-go/.env
+
+# Servisi kur ve başlat
+sudo cp install/btk-sorgu.service.ubuntu /etc/systemd/system/btk-sorgu.service
+sudo systemctl daemon-reload
+sudo systemctl enable btk-sorgu
+sudo systemctl start btk-sorgu
+```
+
+### CentOS / RHEL / Rocky Linux
+
+```bash
+# Binary ve config'i kopyala
+sudo mkdir -p /opt/btk-sorgu-go
+sudo cp build/btk-sorgu-linux-amd64 /opt/btk-sorgu-go/
+sudo cp .env.example /opt/btk-sorgu-go/.env
+sudo chmod +x /opt/btk-sorgu-go/btk-sorgu-linux-amd64
+
+# .env dosyasını düzenle
+sudo nano /opt/btk-sorgu-go/.env
+
+# Servisi kur ve başlat
+sudo cp install/btk-sorgu.service.centos /etc/systemd/system/btk-sorgu.service
+sudo systemctl daemon-reload
+sudo systemctl enable btk-sorgu
+sudo systemctl start btk-sorgu
+
+# SELinux izinleri (gerekirse)
+sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu-linux-amd64"
+sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu-linux-amd64
+```
+
+### Servis Yönetimi
+
+```bash
+sudo systemctl status btk-sorgu    # Durum
+sudo systemctl restart btk-sorgu   # Yeniden başlat
+sudo journalctl -u btk-sorgu -f    # Logları izle
+```
+
 ## ⚠️ Önemli Notlar
 
 1. **Sunucu Lokasyonu**: Bu API'nin doğru çalışması için sunucunun Türkiye IP bloklarında olması gerekir.
