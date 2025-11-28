@@ -110,6 +110,14 @@ func parseCommaSeparated(s string) []string {
 
 // watchConfigFile .env dosyasını izler ve değişikliklerde yeniden yükler
 func watchConfigFile() {
+	// Panic recovery - goroutine çökerse logla
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("⚠️ watchConfigFile panic: %v", r)
+			log.Println("🔄 Hot-reload devre dışı kaldı, uygulama çalışmaya devam ediyor")
+		}
+	}()
+
 	envFile := ".env"
 	var lastModTime time.Time
 
