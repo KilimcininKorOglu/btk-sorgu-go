@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -174,6 +175,13 @@ func checkDomain(domain string) DNSResponse {
 	domain = cleanDomain(domain)
 	response.Domain = domain
 
+	// Domain format validasyonu
+	if !isValidDomain(domain) {
+		response.Success = false
+		response.Error = "Geçersiz domain formatı"
+		return response
+	}
+
 	var lastError error
 	var resolvedIPs []string
 	var usedServer string
@@ -269,6 +277,17 @@ func cleanDomain(domain string) string {
 	}
 
 	return domain
+}
+
+// isValidDomain domain formatının geçerli olup olmadığını kontrol eder
+func isValidDomain(domain string) bool {
+	if len(domain) == 0 || len(domain) > 253 {
+		return false
+	}
+	// RFC 1035 uyumlu basit domain regex
+	pattern := `^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`
+	matched, _ := regexp.MatchString(pattern, domain)
+	return matched
 }
 
 
