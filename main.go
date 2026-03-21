@@ -25,6 +25,9 @@ var (
 	buildDate = "unknown"
 )
 
+// RFC 1035 uyumlu domain validasyon regex'i (bir kez derlenir)
+var domainRegex = regexp.MustCompile(`^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`)
+
 // Config uygulama konfigürasyonu (hot-reload destekli)
 type Config struct {
 	mu             sync.RWMutex
@@ -301,10 +304,7 @@ func isValidDomain(domain string) bool {
 	if len(domain) == 0 || len(domain) > 253 {
 		return false
 	}
-	// RFC 1035 uyumlu basit domain regex
-	pattern := `^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`
-	matched, _ := regexp.MatchString(pattern, domain)
-	return matched
+	return domainRegex.MatchString(domain)
 }
 
 
