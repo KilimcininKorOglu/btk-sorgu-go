@@ -82,8 +82,14 @@ func (c *Config) loadConfig() error {
 		if len(servers) > 0 {
 			// Port ekle (yoksa)
 			for i, server := range servers {
-				if !strings.Contains(server, ":") {
-					servers[i] = server + ":53"
+				if _, _, err := net.SplitHostPort(server); err != nil {
+					if strings.Contains(server, ":") {
+						// IPv6 adresi, port yok
+						servers[i] = "[" + server + "]:53"
+					} else {
+						// IPv4 adresi, port yok
+						servers[i] = server + ":53"
+					}
 				}
 			}
 			c.DNSServers = servers
