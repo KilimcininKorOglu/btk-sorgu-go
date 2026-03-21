@@ -120,8 +120,8 @@ func watchConfigFile() {
 	// Panic recovery - goroutine çökerse logla
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("⚠️ watchConfigFile panic: %v", r)
-			log.Println("🔄 Hot-reload devre dışı kaldı, uygulama çalışmaya devam ediyor")
+			log.Printf("[WARN] watchConfigFile panic: %v", r)
+			log.Println("[WARN] Hot-reload devre dışı kaldı, uygulama çalışmaya devam ediyor")
 		}
 	}()
 
@@ -144,12 +144,12 @@ func watchConfigFile() {
 
 		if info.ModTime().After(lastModTime) {
 			lastModTime = info.ModTime()
-			log.Println("🔄 .env dosyası değişti, konfigürasyon yeniden yükleniyor...")
+			log.Println("[INFO] .env dosyası değişti, konfigürasyon yeniden yükleniyor...")
 
 			if err := config.loadConfig(); err != nil {
-				log.Printf("⚠️ Konfigürasyon yükleme hatası: %v", err)
+				log.Printf("[WARN] Konfigürasyon yükleme hatası: %v", err)
 			} else {
-				log.Printf("✅ Konfigürasyon güncellendi:")
+				log.Printf("[OK] Konfigürasyon güncellendi:")
 				log.Printf("   DNS Servers: %v", config.GetDNSServers())
 				log.Printf("   Blocked IPs: %v", config.GetBlockedIPs())
 				log.Printf("   Server Location: %s", config.GetServerLocation())
@@ -409,7 +409,7 @@ func main() {
 
 	// Konfigürasyonu yükle
 	if err := config.loadConfig(); err != nil {
-		log.Printf("⚠️ Konfigürasyon yükleme hatası: %v", err)
+		log.Printf("[WARN] Konfigürasyon yükleme hatası: %v", err)
 	}
 
 	// Hot-reload için file watcher başlat
@@ -441,21 +441,21 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Println("🛑 Kapatma sinyali alındı, graceful shutdown başlatılıyor...")
+		log.Println("[INFO] Kapatma sinyali alındı, graceful shutdown başlatılıyor...")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
 		if err := server.Shutdown(ctx); err != nil {
-			log.Printf("⚠️ Graceful shutdown hatası: %v", err)
+			log.Printf("[WARN] Graceful shutdown hatası: %v", err)
 		}
 	}()
 
-	log.Println("🚀 BTK Engel Kontrol API başlatıldı")
-	log.Printf("📡 Dinleniyor: http://localhost:%s", port)
-	log.Println("📋 Endpoint: GET /check?domain=example.com")
-	log.Println("🔄 Hot-reload: .env dosyası değişikliklerini otomatik algılar")
-	log.Printf("⚙️  Konfigürasyon:")
+	log.Println("[INFO] BTK Engel Kontrol API başlatıldı")
+	log.Printf("[INFO] Dinleniyor: http://localhost:%s", port)
+	log.Println("[INFO] Endpoint: GET /check?domain=example.com")
+	log.Println("[INFO] Hot-reload: .env dosyası değişikliklerini otomatik algılar")
+	log.Printf("[INFO] Konfigürasyon:")
 	log.Printf("   DNS Servers: %v", config.GetDNSServers())
 	log.Printf("   Blocked IPs: %v", config.GetBlockedIPs())
 	log.Printf("   Server Location: %s", config.GetServerLocation())
@@ -464,5 +464,5 @@ func main() {
 		log.Fatalf("Sunucu başlatılamadı: %v", err)
 	}
 
-	log.Println("✅ Sunucu başarıyla kapatıldı")
+	log.Println("[INFO] Sunucu başarıyla kapatıldı")
 }
