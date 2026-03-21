@@ -25,27 +25,22 @@ cd btk-sorgu-go
 # Konfigürasyon dosyasını oluştur
 cp .env.example .env
 
-# Çalıştır
-go run main.go
+# Build et ve çalıştır (Linux / macOS)
+make run
 
-# Veya build et
-go build -o btk-sorgu-go
-./btk-sorgu-go
+# Sadece build
+make build
 ```
 
-### Cross-Platform Build
-
-```bash
-# Windows'ta tüm platformlar için build
-build.bat
+```bat
+:: Windows
+build.bat build
+build.bat run
 ```
 
-Build çıktıları `build/` klasöründe oluşturulur:
+Build çıktısı `bin/` klasöründe oluşturulur: `btk-sorgu_<os>_<arch>`
 
-- `btk-sorgu-windows-amd64.exe`
-- `btk-sorgu-windows-arm64.exe`
-- `btk-sorgu-linux-amd64`
-- `btk-sorgu-linux-arm64`
+Kullanılabilir tüm komutlar için: `make help` veya `build.bat help`
 
 ## 🌐 API Endpoint'leri
 
@@ -168,9 +163,9 @@ BTK_BLOCKED_IPS=195.175.254.2,2a01:358:4014:a00::3
 ```bash
 # Binary ve config'i kopyala
 sudo mkdir -p /opt/btk-sorgu-go
-sudo cp build/btk-sorgu-linux-amd64 /opt/btk-sorgu-go/
+sudo cp bin/btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
 sudo cp .env.example /opt/btk-sorgu-go/.env
-sudo chmod +x /opt/btk-sorgu-go/btk-sorgu-linux-amd64
+sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
 
 # .env dosyasını düzenle
 sudo nano /opt/btk-sorgu-go/.env
@@ -187,9 +182,9 @@ sudo systemctl start btk-sorgu
 ```bash
 # Binary ve config'i kopyala
 sudo mkdir -p /opt/btk-sorgu-go
-sudo cp build/btk-sorgu-linux-amd64 /opt/btk-sorgu-go/
+sudo cp bin/btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
 sudo cp .env.example /opt/btk-sorgu-go/.env
-sudo chmod +x /opt/btk-sorgu-go/btk-sorgu-linux-amd64
+sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
 
 # .env dosyasını düzenle
 sudo nano /opt/btk-sorgu-go/.env
@@ -201,8 +196,8 @@ sudo systemctl enable btk-sorgu
 sudo systemctl start btk-sorgu
 
 # SELinux izinleri (gerekirse)
-sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu-linux-amd64"
-sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu-linux-amd64
+sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu_linux_amd64"
+sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu_linux_amd64
 ```
 
 ### Servis Yönetimi

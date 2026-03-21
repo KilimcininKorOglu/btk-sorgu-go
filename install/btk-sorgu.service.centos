@@ -9,7 +9,7 @@ Type=simple
 User=nobody
 Group=nobody
 WorkingDirectory=/opt/btk-sorgu-go
-ExecStart=/opt/btk-sorgu-go/btk-sorgu-linux-amd64
+ExecStart=/opt/btk-sorgu-go/btk-sorgu_linux_amd64
 Restart=always
 RestartSec=5
 
