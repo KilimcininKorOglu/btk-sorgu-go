@@ -18,6 +18,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Build değişkenleri (ldflags ile enjekte edilir)
+var (
+	version   = "dev"
+	commit    = "unknown"
+	buildDate = "unknown"
+)
+
 // Config uygulama konfigürasyonu (hot-reload destekli)
 type Config struct {
 	mu             sync.RWMutex
@@ -356,7 +363,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":    "healthy",
 		"timestamp": time.Now().Unix(),
-		"version":   "1.0.0",
+		"version":   version,
 	})
 }
 
@@ -376,7 +383,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"name":        "BTK Engel Kontrol API",
-		"version":     "1.0.0",
+		"version":     version,
 		"description": "Türkiye'de BTK tarafından engellenen domainleri kontrol eden API",
 		"endpoints": map[string]string{
 			"GET /check?domain={domain}": "Domain engel durumunu kontrol et",

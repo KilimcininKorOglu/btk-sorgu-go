@@ -129,12 +129,12 @@ Güncel konfigürasyonu görüntüler.
 
 Tüm ayarlar `.env` dosyasından okunur. `.env.example` dosyasını `.env` olarak kopyalayın ve düzenleyin.
 
-| Değişken | Varsayılan | Hot-Reload | Açıklama |
-|----------|------------|------------|----------|
-| `PORT` | `8080` | ❌ | API'nin dinleyeceği port (sadece başlangıçta okunur) |
-| `SERVER_LOCATION` | `Unknown` | ✅ | Sunucu lokasyonu (boşluklar otomatik `_` olur) |
-| `BTK_DNS_SERVERS` | `195.175.39.39,195.175.39.40` | ✅ | BTK DNS sunucuları (virgülle ayrılmış) |
-| `BTK_BLOCKED_IPS` | `195.175.254.2,2a01:358:4014:a00::3` | ✅ | Engel IP adresleri (virgülle ayrılmış) |
+| Değişken          | Varsayılan                           | Hot-Reload | Açıklama                                             |
+|-------------------|--------------------------------------|------------|------------------------------------------------------|
+| `PORT`            | `8080`                               | ❌          | API'nin dinleyeceği port (sadece başlangıçta okunur) |
+| `SERVER_LOCATION` | `Unknown`                            | ✅          | Sunucu lokasyonu (boşluklar otomatik `_` olur)       |
+| `BTK_DNS_SERVERS` | `195.175.39.39,195.175.39.40`        | ✅          | BTK DNS sunucuları (virgülle ayrılmış)               |
+| `BTK_BLOCKED_IPS` | `195.175.254.2,2a01:358:4014:a00::3` | ✅          | Engel IP adresleri (virgülle ayrılmış)               |
 
 **Örnek .env:**
 

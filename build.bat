@@ -1,90 +1,86 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo ============================================
-echo    BTK Sorgu Go - Build Script
-echo ============================================
-echo.
+set BINARY_NAME=btk-sorgu
+set BUILD_DIR=bin
 
-:: Go path kontrolü - eğer PATH'te yoksa varsayılan konumu kullan
-where go >nul 2>nul
-if %errorlevel% neq 0 (
-    if exist "C:\Program Files\Go\bin\go.exe" (
-        set "PATH=C:\Program Files\Go\bin;%PATH%"
-        echo [INFO] Go PATH'e eklendi: C:\Program Files\Go\bin
-    ) else (
-        echo [HATA] Go bulunamadi! Lutfen Go'yu yukleyin.
-        exit /b 1
-    )
-)
+:: Get version info
+for /f "tokens=*" %%i in ('git describe --tags --always --dirty 2^>nul') do set VERSION=%%i
+if not defined VERSION set VERSION=dev
 
-:: Build klasörünü oluştur
-if not exist "build" mkdir build
+for /f "tokens=*" %%i in ('git rev-parse --short HEAD 2^>nul') do set COMMIT=%%i
+if not defined COMMIT set COMMIT=unknown
 
-:: Versiyon bilgisi
-set VERSION=1.0.0
-set BUILD_TIME=%date% %time%
+for /f "tokens=*" %%i in ('powershell -command "Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ' -AsUTC"') do set BUILD_DATE=%%i
+if not defined BUILD_DATE set BUILD_DATE=unknown
 
-echo [INFO] Build klasoru: build\
-echo [INFO] Versiyon: %VERSION%
-echo.
+set LDFLAGS=-s -w -X 'main.version=%VERSION%' -X 'main.commit=%COMMIT%' -X 'main.buildDate=%BUILD_DATE%'
 
-:: Windows AMD64 Build
-echo [1/4] Windows AMD64 build ediliyor...
-set GOOS=windows
-set GOARCH=amd64
-go build -ldflags="-s -w" -o build\btk-sorgu-windows-amd64.exe main.go
-if %errorlevel% neq 0 (
-    echo [HATA] Windows AMD64 build basarisiz!
-    exit /b 1
-)
-echo [OK] build\btk-sorgu-windows-amd64.exe
+if "%~1"=="" goto help
+goto %~1
 
-:: Windows ARM64 Build
-echo [2/4] Windows ARM64 build ediliyor...
-set GOOS=windows
-set GOARCH=arm64
-go build -ldflags="-s -w" -o build\btk-sorgu-windows-arm64.exe main.go
-if %errorlevel% neq 0 (
-    echo [HATA] Windows ARM64 build basarisiz!
-    exit /b 1
-)
-echo [OK] build\btk-sorgu-windows-arm64.exe
+:build
+    if not exist %BUILD_DIR% mkdir %BUILD_DIR%
+    go build -ldflags "%LDFLAGS%" -o %BUILD_DIR%\%BINARY_NAME%.exe .
+    goto end
 
-:: Linux AMD64 Build
-echo [3/4] Linux AMD64 build ediliyor...
-set GOOS=linux
-set GOARCH=amd64
-go build -ldflags="-s -w" -o build\btk-sorgu-linux-amd64 main.go
-if %errorlevel% neq 0 (
-    echo [HATA] Linux AMD64 build basarisiz!
-    exit /b 1
-)
-echo [OK] build\btk-sorgu-linux-amd64
+:clean
+    if exist %BUILD_DIR% rmdir /s /q %BUILD_DIR%
+    go clean
+    goto end
 
-:: Linux ARM64 Build
-echo [4/4] Linux ARM64 build ediliyor...
-set GOOS=linux
-set GOARCH=arm64
-go build -ldflags="-s -w" -o build\btk-sorgu-linux-arm64 main.go
-if %errorlevel% neq 0 (
-    echo [HATA] Linux ARM64 build basarisiz!
-    exit /b 1
-)
-echo [OK] build\btk-sorgu-linux-arm64
+:test
+    go test ./...
+    goto end
 
-echo.
-echo ============================================
-echo    Build Tamamlandi!
-echo ============================================
-echo.
-echo Olusturulan dosyalar:
-echo.
-dir /b build\
-echo.
-echo Kullanim:
-echo   Windows: build\btk-sorgu-windows-amd64.exe
-echo   Linux:   ./build/btk-sorgu-linux-amd64
-echo.
+:test-race
+    go test -race ./...
+    goto end
 
-endlocal
+:test-cover
+    go test -cover ./...
+    goto end
+
+:test-verbose
+    go test -v ./...
+    goto end
+
+:bench
+    go test -bench=. -benchmem ./...
+    goto end
+
+:run
+    call :build
+    %BUILD_DIR%\%BINARY_NAME%.exe
+    goto end
+
+:fmt
+    go fmt ./...
+    goto end
+
+:vet
+    go vet ./...
+    goto end
+
+:lint
+    call :fmt
+    call :vet
+    goto end
+
+:help
+    echo Available commands:
+    echo   build        - Build the binary to bin\
+    echo   clean        - Remove build artifacts
+    echo   test         - Run all tests
+    echo   test-race    - Run tests with race detector
+    echo   test-cover   - Run tests with coverage
+    echo   test-verbose - Run tests with verbose output
+    echo   bench        - Run benchmarks
+    echo   run          - Build and run the server
+    echo   fmt          - Format code
+    echo   vet          - Run go vet
+    echo   lint         - Run fmt and vet
+    goto end
+
+:end
+    endlocal
