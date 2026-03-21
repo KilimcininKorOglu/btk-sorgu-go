@@ -40,6 +40,13 @@ build.bat run
 
 Build çıktısı `bin/` klasöründe oluşturulur: `btk-sorgu_<os>_<arch>`
 
+Versiyon bilgisi:
+
+```bash
+./bin/btk-sorgu_linux_amd64 --version
+# btk-sorgu 1.0.1 (commit: abc1234, built: 2026-03-21T22:00:00Z)
+```
+
 Kullanılabilir tüm komutlar için: `make help` veya `build.bat help`
 
 ## API Endpoint'leri
@@ -149,8 +156,8 @@ BTK_BLOCKED_IPS=195.175.254.2,2a01:358:4014:a00::3
 `.env` dosyası her 2 saniyede bir kontrol edilir. Değişiklik algılandığında konfigürasyon otomatik olarak güncellenir - uygulamayı yeniden başlatmanıza gerek yoktur.
 
 ```text
-.env dosyası değişti, konfigürasyon yeniden yükleniyor...
-Konfigürasyon güncellendi:
+[INFO] .env dosyası değişti, konfigürasyon yeniden yükleniyor...
+[OK] Konfigürasyon güncellendi:
    DNS Servers: [195.175.39.39:53 195.175.39.40:53]
    Blocked IPs: [195.175.254.2 2a01:358:4014:a00::3]
    Server Location: Turkey_VDS
