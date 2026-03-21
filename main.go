@@ -68,7 +68,7 @@ func (c *Config) GetServerLocation() string {
 // loadConfig .env dosyasından konfigürasyonu yükler
 func (c *Config) loadConfig() error {
 	// .env dosyasını yükle (varsa)
-	_ = godotenv.Load()
+	_ = godotenv.Overload()
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
