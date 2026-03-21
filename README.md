@@ -2,20 +2,20 @@
 
 Türkiye'de BTK (Bilgi Teknolojileri ve İletişim Kurumu) tarafından engellenen web sitelerini tespit eden Go API servisi.
 
-## 🚀 Özellikler
+## Özellikler
 
 - BTK DNS sunucuları üzerinden domain engel kontrolü
 - Hızlı response süreleri (~8ms)
 - CORS desteği
 - JSON API formatı
 - Health check endpoint'i
-- **Hot-reload**: `.env` dosyası değişikliklerini otomatik algılar (uygulama yeniden başlatmaya gerek yok)
+- Hot-reload: `.env` dosyası değişikliklerini otomatik algılar (uygulama yeniden başlatmaya gerek yok)
 
-## 📋 Nasıl Çalışır?
+## Nasıl Çalışır?
 
 BTK, engellediği sitelerin DNS sorgularını `195.175.254.2` IP adresine yönlendirir. Bu API, belirtilen domain'i BTK DNS sunucuları üzerinden sorgulayarak bu IP'nin döndürülüp döndürülmediğini kontrol eder.
 
-## 🔧 Kurulum
+## Kurulum
 
 ```bash
 # Repository'yi klonla
@@ -42,7 +42,7 @@ Build çıktısı `bin/` klasöründe oluşturulur: `btk-sorgu_<os>_<arch>`
 
 Kullanılabilir tüm komutlar için: `make help` veya `build.bat help`
 
-## 🌐 API Endpoint'leri
+## API Endpoint'leri
 
 ### GET /
 
@@ -107,6 +107,8 @@ API sağlık durumunu kontrol eder.
 }
 ```
 
+> **Not:** `version` alanı build sırasında ldflags ile enjekte edilen değeri yansıtır.
+
 ### GET /config
 
 Güncel konfigürasyonu görüntüler.
@@ -120,16 +122,16 @@ Güncel konfigürasyonu görüntüler.
 }
 ```
 
-## ⚙️ Konfigürasyon (.env)
+## Konfigürasyon (.env)
 
 Tüm ayarlar `.env` dosyasından okunur. `.env.example` dosyasını `.env` olarak kopyalayın ve düzenleyin.
 
 | Değişken          | Varsayılan                           | Hot-Reload | Açıklama                                             |
 |-------------------|--------------------------------------|------------|------------------------------------------------------|
-| `PORT`            | `8080`                               | ❌          | API'nin dinleyeceği port (sadece başlangıçta okunur) |
-| `SERVER_LOCATION` | `Unknown`                            | ✅          | Sunucu lokasyonu (boşluklar otomatik `_` olur)       |
-| `BTK_DNS_SERVERS` | `195.175.39.39,195.175.39.40`        | ✅          | BTK DNS sunucuları (virgülle ayrılmış)               |
-| `BTK_BLOCKED_IPS` | `195.175.254.2,2a01:358:4014:a00::3` | ✅          | Engel IP adresleri (virgülle ayrılmış)               |
+| `PORT`            | `8080`                               | Hayır      | API'nin dinleyeceği port (sadece başlangıçta okunur) |
+| `SERVER_LOCATION` | `Unknown`                            | Evet       | Sunucu lokasyonu (boşluklar otomatik `_` olur)       |
+| `BTK_DNS_SERVERS` | `195.175.39.39,195.175.39.40`        | Evet       | BTK DNS sunucuları (virgülle ayrılmış)               |
+| `BTK_BLOCKED_IPS` | `195.175.254.2,2a01:358:4014:a00::3` | Evet       | Engel IP adresleri (virgülle ayrılmış)               |
 
 **Örnek .env:**
 
@@ -142,19 +144,19 @@ BTK_BLOCKED_IPS=195.175.254.2,2a01:358:4014:a00::3
 
 > **Not:** `SERVER_LOCATION=Turkey VDS` yazarsanız, sistem otomatik olarak `Turkey_VDS` olarak dönüştürür.
 
-### 🔄 Hot-Reload
+### Hot-Reload
 
 `.env` dosyası her 2 saniyede bir kontrol edilir. Değişiklik algılandığında konfigürasyon otomatik olarak güncellenir - uygulamayı yeniden başlatmanıza gerek yoktur.
 
 ```text
-🔄 .env dosyası değişti, konfigürasyon yeniden yükleniyor...
-✅ Konfigürasyon güncellendi:
+.env dosyası değişti, konfigürasyon yeniden yükleniyor...
+Konfigürasyon güncellendi:
    DNS Servers: [195.175.39.39:53 195.175.39.40:53]
    Blocked IPs: [195.175.254.2 2a01:358:4014:a00::3]
    Server Location: Turkey_VDS
 ```
 
-## 🐧 Linux Servis Kurulumu (systemd)
+## Linux Servis Kurulumu (systemd)
 
 `install/` klasöründe Ubuntu ve CentOS için hazır systemd dosyaları bulunur.
 
@@ -208,7 +210,7 @@ sudo systemctl restart btk-sorgu   # Yeniden başlat
 sudo journalctl -u btk-sorgu -f    # Logları izle
 ```
 
-## ⚠️ Önemli Notlar
+## Önemli Notlar
 
 1. **Sunucu Lokasyonu**: Bu API'nin doğru çalışması için sunucunun Türkiye IP bloklarında olması gerekir.
 
