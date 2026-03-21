@@ -381,6 +381,13 @@ func handleConfig(w http.ResponseWriter, r *http.Request) {
 // handleRoot / endpoint handler'ı
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	if r.URL.Path != "/" {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "Not found",
+		})
+		return
+	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"name":        "BTK Engel Kontrol API",
 		"version":     version,
