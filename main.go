@@ -401,6 +401,12 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// --version flag kontrolü
+	if len(os.Args) > 1 && os.Args[1] == "--version" {
+		fmt.Printf("btk-sorgu %s (commit: %s, built: %s)\n", version, commit, buildDate)
+		return
+	}
+
 	// Konfigürasyonu yükle
 	if err := config.loadConfig(); err != nil {
 		log.Printf("⚠️ Konfigürasyon yükleme hatası: %v", err)
