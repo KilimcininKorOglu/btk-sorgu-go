@@ -287,8 +287,12 @@ func checkIfBlocked(ips []string, blockedIPs []string) (bool, string) {
 // cleanDomain domain'den protokol ve www önekini temizler
 func cleanDomain(domain string) string {
 	domain = strings.TrimSpace(domain)
-	domain = strings.TrimPrefix(domain, "http://")
-	domain = strings.TrimPrefix(domain, "https://")
+	lower := strings.ToLower(domain)
+	if strings.HasPrefix(lower, "https://") {
+		domain = domain[len("https://"):]
+	} else if strings.HasPrefix(lower, "http://") {
+		domain = domain[len("http://"):]
+	}
 	domain = strings.TrimPrefix(domain, "www.")
 	domain = strings.TrimSuffix(domain, "/")
 
