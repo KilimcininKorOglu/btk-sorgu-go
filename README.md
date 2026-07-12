@@ -1,75 +1,103 @@
 # BTK Engel Kontrol API
 
-Türkiye'de BTK (Bilgi Teknolojileri ve İletişim Kurumu) tarafından engellenen web sitelerini tespit eden Go API servisi.
+Türkiye'de BTK (Bilgi Teknolojileri ve İletişim Kurumu) DNS yanıtlarına göre domain engel durumunu kontrol eden Go HTTP API servisi.
 
 ## Özellikler
 
-- BTK DNS sunucuları üzerinden domain engel kontrolü
-- Hızlı response süreleri (~8ms)
-- CORS desteği
-- JSON API formatı
-- Health check endpoint'i
-- Hot-reload: `.env` dosyası değişikliklerini otomatik algılar (uygulama yeniden başlatmaya gerek yok)
+- Yapılandırılmış BTK DNS sunucuları üzerinden domain kontrolü
+- IPv4 ve IPv6 engel IP adreslerini destekleme
+- GET ve JSON gövdeli POST istekleri
+- JSON response formatı
+- `/health` sağlık kontrolü
+- `/check` endpoint'inde CORS desteği
+- `.env` değişikliklerini uygulamayı yeniden başlatmadan algılayan hot-reload
+- `SIGINT` ve `SIGTERM` için graceful shutdown
+- Linux, Windows ve macOS için amd64 ve arm64 build desteği
 
 ## Nasıl Çalışır?
 
-BTK, engellediği sitelerin DNS sorgularını `195.175.254.2` IP adresine yönlendirir. Bu API, belirtilen domain'i BTK DNS sunucuları üzerinden sorgulayarak bu IP'nin döndürülüp döndürülmediğini kontrol eder.
+BTK tarafından engellenen domainler, BTK DNS sunucuları üzerinden çözümlendiğinde yapılandırılmış engel IP adreslerine yönlendirilebilir. API şu akışı izler:
 
-## Kurulum
+1. Domain girdisinden `http://`, `https://`, `www.` ve path bölümünü temizler.
+2. Domain formatını kontrol eder.
+3. Yapılandırılmış DNS sunucularını sırayla dener.
+4. Dönen IPv4 ve IPv6 adreslerini `BTK_BLOCKED_IPS` listesiyle karşılaştırır.
+
+Bu yöntem yalnızca DNS bazlı engelleri tespit eder. IP veya SNI bazlı engelleri tespit etmez.
+
+## Gereksinimler
+
+- Go 1.24.4 veya uyumlu bir Go sürümü
+- BTK DNS sunucularına ağ erişimi
+- Doğru sonuçlar için Türkiye IP bloklarında çalışan bir sunucu
+
+## Hızlı Başlangıç
 
 ```bash
-# Repository'yi klonla
 git clone https://github.com/KilimcininKorOglu/btk-sorgu-go.git
 cd btk-sorgu-go
-
-# Konfigürasyon dosyasını oluştur
 cp .env.example .env
-
-# Build et ve çalıştır (Linux / macOS)
 make run
-
-# Sadece build
-make build
 ```
 
-```bat
-:: Windows
-build.bat build
-build.bat run
-```
+Sunucu varsayılan olarak `http://localhost:8080` adresinde dinler.
 
-Build çıktısı `bin/` klasöründe oluşturulur: `btk-sorgu_<os>_<arch>`
-
-Versiyon bilgisi:
+Sadece build almak için:
 
 ```bash
-./bin/btk-sorgu_linux_amd64 --version
-# btk-sorgu 1.0.1 (commit: abc1234, built: 2026-03-21T22:00:00Z)
+make build
+./bin/btk-sorgu_darwin_arm64 --version
 ```
 
-Kullanılabilir tüm komutlar için: `make help` veya `build.bat help`
+`bin/` altındaki dosya adı işletim sistemi ve mimariye göre değişir. Tüm Make hedeflerini görmek için `make help` komutunu kullanın.
+
+Windows'ta eşdeğer komutlar `build.bat build`, `build.bat run` ve `build.bat help` biçimindedir.
+
+## Geliştirme Komutları
+
+| Komut | Açıklama |
+|---|---|
+| `make build` | `bin/btk-sorgu_<GOOS>_<GOARCH>` binary'sini oluşturur. |
+| `make run` | Build alır ve API sunucusunu başlatır. |
+| `make test` | Tüm Go testlerini çalıştırır. |
+| `make test-race` | Race detector ile test çalıştırır. |
+| `make test-cover` | Coverage ile test çalıştırır. |
+| `make test-verbose` | Testleri ayrıntılı çıktıyla çalıştırır. |
+| `make bench` | Benchmark testlerini çalıştırır. |
+| `make fmt` | Go dosyalarını formatlar. |
+| `make vet` | `go vet ./...` çalıştırır. |
+| `make lint` | Önce `go fmt ./...`, sonra `go vet ./...` çalıştırır. Kaynak dosyalarını değiştirebilir. |
+| `make clean` | Build çıktısını kaldırır ve `go clean` çalıştırır. |
+
+Şu anda repository'de `*_test.go` dosyası bulunmamaktadır. Test eklendiğinde tek bir testi çalıştırmak için `go test -run '^TestName$' ./...` kullanılabilir.
+
+Build sırasında version bilgisi linker flags ile binary'ye eklenir. `--version` çıktısı version, commit ve build tarihini gösterir.
 
 ## API Endpoint'leri
 
-### GET /
+### `GET /`
 
-API bilgilerini ve güncel konfigürasyonu döndürür.
+API adı, version bilgisi, endpoint listesi ve güncel konfigürasyonu döndürür.
 
-### GET /check?domain={domain}
+### `GET /check?domain={domain}`
 
-Domain'in engel durumunu kontrol eder.
-
-**Parametreler:**
-
-- `domain` (required): Kontrol edilecek domain (örn: discord.com)
-
-**Örnek İstek:**
+Query string içindeki domain'i kontrol eder.
 
 ```bash
 curl "http://localhost:8080/check?domain=discord.com"
 ```
 
-**Örnek Response (Engelli Site):**
+### `POST /check`
+
+Domain'i JSON gövdesiyle kontrol eder:
+
+```bash
+curl -X POST "http://localhost:8080/check" \
+  -H "Content-Type: application/json" \
+  -d '{"domain":"discord.com"}'
+```
+
+Başarılı response örneği:
 
 ```json
 {
@@ -80,45 +108,31 @@ curl "http://localhost:8080/check?domain=discord.com"
   "dns_server": "195.175.39.40",
   "resolved_ips": ["195.175.254.2"],
   "blocked_ip": "195.175.254.2",
-  "query_time": "01:35:30.077",
+  "query_time": "12:34:56.789",
   "response_time_ms": 8.09,
   "server_location": "Turkey_VDS"
 }
 ```
 
-**Örnek Response (Engelsiz Site):**
+`success` değeri `false` olduğunda `error` alanı açıklama içerir. Geçersiz domain, bozuk JSON veya DNS çözümleme hataları HTTP 400 döndürür.
 
-```json
-{
-  "domain": "google.com",
-  "timestamp": 1764196530,
-  "success": true,
-  "is_blocked": false,
-  "dns_server": "195.175.39.39",
-  "resolved_ips": ["142.250.185.238"],
-  "query_time": "01:35:30.077",
-  "response_time_ms": 5.12,
-  "server_location": "Turkey_VDS"
-}
-```
+### `GET /health`
 
-### GET /health
-
-API sağlık durumunu kontrol eder.
+API'nin çalıştığını ve build version bilgisini döndürür:
 
 ```json
 {
   "status": "healthy",
   "timestamp": 1764196530,
-  "version": "1.0.0"
+  "version": "1.0.1"
 }
 ```
 
-> **Not:** `version` alanı build sırasında ldflags ile enjekte edilen değeri yansıtır.
+`version` değeri build sırasında linker flags ile enjekte edilir.
 
-### GET /config
+### `GET /config`
 
-Güncel konfigürasyonu görüntüler.
+Aktif runtime konfigürasyonunu döndürür:
 
 ```json
 {
@@ -129,18 +143,22 @@ Güncel konfigürasyonu görüntüler.
 }
 ```
 
-## Konfigürasyon (.env)
+### `OPTIONS /check`
 
-Tüm ayarlar `.env` dosyasından okunur. `.env.example` dosyasını `.env` olarak kopyalayın ve düzenleyin.
+CORS preflight isteklerini karşılar. `/check` endpoint'i `Access-Control-Allow-Origin: *` header'ını döndürür.
 
-| Değişken          | Varsayılan                           | Hot-Reload | Açıklama                                             |
-|-------------------|--------------------------------------|------------|------------------------------------------------------|
-| `PORT`            | `8080`                               | Hayır      | API'nin dinleyeceği port (sadece başlangıçta okunur) |
-| `SERVER_LOCATION` | `Unknown`                            | Evet       | Sunucu lokasyonu (boşluklar otomatik `_` olur)       |
-| `BTK_DNS_SERVERS` | `195.175.39.39,195.175.39.40`        | Evet       | BTK DNS sunucuları (virgülle ayrılmış)               |
-| `BTK_BLOCKED_IPS` | `195.175.254.2,2a01:358:4014:a00::3` | Evet       | Engel IP adresleri (virgülle ayrılmış)               |
+## Konfigürasyon
 
-**Örnek .env:**
+`.env.example` dosyasını `.env` olarak kopyalayın. Ayarlar aşağıdaki environment variable'lar üzerinden yapılır:
+
+| Değişken | Varsayılan | Hot-reload | Açıklama |
+|---|---|---|---|
+| `PORT` | `8080` | Hayır | API'nin dinleyeceği port. Yalnızca başlangıçta okunur. |
+| `SERVER_LOCATION` | `Unknown` | Evet | Response içindeki sunucu lokasyonu. Boşluklar `_` karakterine çevrilir. |
+| `BTK_DNS_SERVERS` | `195.175.39.39,195.175.39.40` | Evet | Virgülle ayrılmış DNS sunucuları. Port belirtilmezse `:53` eklenir. |
+| `BTK_BLOCKED_IPS` | `195.175.254.2,2a01:358:4014:a00::3` | Evet | Virgülle ayrılmış engel IPv4 ve IPv6 adresleri. |
+
+Örnek `.env`:
 
 ```env
 PORT=8080
@@ -149,37 +167,36 @@ BTK_DNS_SERVERS=195.175.39.39,195.175.39.40
 BTK_BLOCKED_IPS=195.175.254.2,2a01:358:4014:a00::3
 ```
 
-> **Not:** `SERVER_LOCATION=Turkey VDS` yazarsanız, sistem otomatik olarak `Turkey_VDS` olarak dönüştürür.
+`.env` dosyası iki saniyede bir kontrol edilir. `BTK_DNS_SERVERS`, `BTK_BLOCKED_IPS` veya `SERVER_LOCATION` değiştiğinde yeni değerler otomatik olarak yüklenir. `PORT` değişikliği için uygulamayı yeniden başlatmak gerekir.
 
-### Hot-Reload
+## Build ve Release
 
-`.env` dosyası her 2 saniyede bir kontrol edilir. Değişiklik algılandığında konfigürasyon otomatik olarak güncellenir - uygulamayı yeniden başlatmanıza gerek yoktur.
+GoReleaser yapılandırması `.goreleaser.yml` dosyasındadır. `v*` formatındaki bir tag push edildiğinde GitHub Actions release workflow'u çalışır ve şu platformlar için binary üretir:
 
-```text
-[INFO] .env dosyası değişti, konfigürasyon yeniden yükleniyor...
-[OK] Konfigürasyon güncellendi:
-   DNS Servers: [195.175.39.39:53 195.175.39.40:53]
-   Blocked IPs: [195.175.254.2 2a01:358:4014:a00::3]
-   Server Location: Turkey_VDS
+- Linux, Windows ve macOS
+- amd64 ve arm64
+- `CGO_ENABLED=0`
+
+Local binary doğrulaması:
+
+```bash
+make build
+./bin/btk-sorgu_<os>_<arch> --version
 ```
 
-## Linux Servis Kurulumu (systemd)
+## Linux systemd Kurulumu
 
-`install/` klasöründe Ubuntu ve CentOS için hazır systemd dosyaları bulunur.
+Hazır service dosyaları `install/` klasöründedir. Önce Linux binary'sini oluşturun veya release paketinden temin edin.
 
 ### Ubuntu / Debian
 
 ```bash
-# Binary ve config'i kopyala
 sudo mkdir -p /opt/btk-sorgu-go
 sudo cp bin/btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
 sudo cp .env.example /opt/btk-sorgu-go/.env
 sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
-
-# .env dosyasını düzenle
 sudo nano /opt/btk-sorgu-go/.env
 
-# Servisi kur ve başlat
 sudo cp install/btk-sorgu.service.ubuntu /etc/systemd/system/btk-sorgu.service
 sudo systemctl daemon-reload
 sudo systemctl enable btk-sorgu
@@ -189,44 +206,37 @@ sudo systemctl start btk-sorgu
 ### CentOS / RHEL / Rocky Linux
 
 ```bash
-# Binary ve config'i kopyala
 sudo mkdir -p /opt/btk-sorgu-go
 sudo cp bin/btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
 sudo cp .env.example /opt/btk-sorgu-go/.env
 sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
-
-# .env dosyasını düzenle
 sudo nano /opt/btk-sorgu-go/.env
 
-# Servisi kur ve başlat
 sudo cp install/btk-sorgu.service.centos /etc/systemd/system/btk-sorgu.service
 sudo systemctl daemon-reload
 sudo systemctl enable btk-sorgu
 sudo systemctl start btk-sorgu
+```
 
-# SELinux izinleri (gerekirse)
+SELinux etkinse gerekebilecek izinler:
+
+```bash
 sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu_linux_amd64"
 sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu_linux_amd64
 ```
 
-### Servis Yönetimi
+Servis yönetimi:
 
 ```bash
-sudo systemctl status btk-sorgu    # Durum
-sudo systemctl restart btk-sorgu   # Yeniden başlat
-sudo journalctl -u btk-sorgu -f    # Logları izle
+sudo systemctl status btk-sorgu
+sudo systemctl restart btk-sorgu
+sudo journalctl -u btk-sorgu -f
 ```
 
-## Önemli Notlar
+## Operasyonel Notlar
 
-1. **Sunucu Lokasyonu**: Bu API'nin doğru çalışması için sunucunun Türkiye IP bloklarında olması gerekir.
-
-2. **DNS Yönlendirmesi**: Sunucunun DNS'i BTK DNS sunucularına yönlendirilmelidir:
-
-   ```bash
-   sudo resolvectl dns ens32 195.175.39.39 195.175.39.40
-   ```
-
-3. **Engel Türleri**: Bu yöntem sadece DNS bazlı engelleri tespit eder. IP/SNI bazlı engeller bu yöntemle tespit edilemez.
-
-4. **Timeout**: BTK DNS sunucularına erişilemezse timeout hatası alınabilir (5 saniye).
+- BTK DNS sunucularına erişim yoksa DNS çözümleme timeout ile sonuçlanabilir. Resolver ve context timeout değerleri 5 saniyedir.
+- `SERVER_LOCATION` yalnızca response bilgisi olarak kullanılır, sunucunun gerçek lokasyonunu doğrulamaz.
+- `/config` endpoint'i aktif DNS sunucularını, engel IP'lerini ve server location bilgisini döndürür. Bu endpoint'i public erişime açmadan önce deployment gereksinimlerini değerlendirin.
+- `/check` endpoint'inde CORS tüm origin'lere açıktır. Production ortamında bu davranışı ihtiyaçlarınıza göre sınırlandırın.
+- API'de authentication veya authorization bulunmaz. Public erişim kararı reverse proxy, firewall veya uygulama katmanında ayrıca verilmelidir.
