@@ -32,3 +32,4 @@ vendor/
 /bin/
 /dist/
 /build/
+.wrongstack/
