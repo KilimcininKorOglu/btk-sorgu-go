@@ -291,9 +291,14 @@ maybeSetupTLS() {
 
 	local emailArgs=(--register-unsafely-without-email)
 	[[ -n "${EMAIL}" ]] && emailArgs=(-m "${EMAIL}")
-	certbot --nginx -d "${DOMAIN}" "${emailArgs[@]}" --agree-tos --redirect --non-interactive ||
-		die "certbot ile sertifika alınamadı."
-	ok "HTTPS etkinleştirildi: https://${DOMAIN} (otomatik yenileme aktif)."
+	# Service and nginx are already up; a TLS failure should not abort the install.
+	# Warn and keep serving over HTTP/80 instead of dying.
+	if certbot --nginx -d "${DOMAIN}" "${emailArgs[@]}" --agree-tos --redirect --non-interactive; then
+		ok "HTTPS etkinleştirildi: https://${DOMAIN} (otomatik yenileme aktif)."
+	else
+		warn "certbot ile sertifika alınamadı; kurulum HTTP/80 üzerinden çalışmaya devam ediyor."
+		warn "Sorunu giderdikten sonra elle çalıştırın: certbot --nginx -d ${DOMAIN}"
+	fi
 }
 
 # verifyInstall checks the service is up and answering on the health endpoint
