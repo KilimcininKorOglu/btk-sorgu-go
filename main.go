@@ -299,7 +299,10 @@ func cleanDomain(domain string) string {
 	} else if strings.HasPrefix(lower, "http://") {
 		domain = domain[len("http://"):]
 	}
-	domain = strings.TrimPrefix(domain, "www.")
+	// www. önekini büyük/küçük harf duyarsız ayıkla
+	if len(domain) >= 4 && strings.EqualFold(domain[:4], "www.") {
+		domain = domain[4:]
+	}
 	domain = strings.TrimSuffix(domain, "/")
 
 	if idx := strings.Index(domain, "/"); idx != -1 {
