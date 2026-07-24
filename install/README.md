@@ -5,9 +5,9 @@
 ```bash
 # Binary'yi kopyala
 sudo mkdir -p /opt/btk-sorgu-go
-sudo cp btk-sorgu-linux-amd64 /opt/btk-sorgu-go/
+sudo cp btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
 sudo cp .env.example /opt/btk-sorgu-go/.env
-sudo chmod +x /opt/btk-sorgu-go/btk-sorgu-linux-amd64
+sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
 
 # .env dosyasını düzenle
 sudo nano /opt/btk-sorgu-go/.env
@@ -28,9 +28,9 @@ sudo journalctl -u btk-sorgu -f
 ```bash
 # Binary'yi kopyala
 sudo mkdir -p /opt/btk-sorgu-go
-sudo cp btk-sorgu-linux-amd64 /opt/btk-sorgu-go/
+sudo cp btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
 sudo cp .env.example /opt/btk-sorgu-go/.env
-sudo chmod +x /opt/btk-sorgu-go/btk-sorgu-linux-amd64
+sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
 
 # .env dosyasını düzenle
 sudo nano /opt/btk-sorgu-go/.env
@@ -42,8 +42,8 @@ sudo systemctl enable btk-sorgu
 sudo systemctl start btk-sorgu
 
 # SELinux izinleri (gerekirse)
-sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu-linux-amd64"
-sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu-linux-amd64
+sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu_linux_amd64"
+sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu_linux_amd64
 
 # Durum kontrolü
 sudo systemctl status btk-sorgu

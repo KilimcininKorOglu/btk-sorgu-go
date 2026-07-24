@@ -9,6 +9,7 @@ Türkiye'de BTK (Bilgi Teknolojileri ve İletişim Kurumu) DNS yanıtlarına gö
 - GET ve JSON gövdeli POST istekleri
 - JSON response formatı
 - `/health` sağlık kontrolü
+- `/config` ile aktif runtime konfigürasyonunu görüntüleme
 - `/check` endpoint'inde CORS desteği
 - `.env` değişikliklerini uygulamayı yeniden başlatmadan algılayan hot-reload
 - `SIGINT` ve `SIGTERM` için graceful shutdown
