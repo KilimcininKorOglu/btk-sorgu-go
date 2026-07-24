@@ -241,3 +241,4 @@ sudo journalctl -u btk-sorgu -f
 - `/config` endpoint'i aktif DNS sunucularını, engel IP'lerini ve server location bilgisini döndürür. Bu endpoint'i public erişime açmadan önce deployment gereksinimlerini değerlendirin.
 - `/check` endpoint'inde CORS tüm origin'lere açıktır. Production ortamında bu davranışı ihtiyaçlarınıza göre sınırlandırın.
 - API'de authentication veya authorization bulunmaz. Public erişim kararı reverse proxy, firewall veya uygulama katmanında ayrıca verilmelidir.
+- `/check` her istekte dışa DNS sorgusu tetikler ve uygulama içi rate limiting yoktur. İstek başına DNS yükünü ve kötüye kullanımı sınırlamak için rate limiting'i reverse proxy (örneğin nginx `limit_req`) katmanında yapılandırın.
