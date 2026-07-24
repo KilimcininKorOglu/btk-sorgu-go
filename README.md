@@ -121,12 +121,12 @@ CORS preflight isteklerini karşılar; `Access-Control-Allow-Origin: *` döndür
 
 `.env.example` dosyasını `.env` olarak kopyalayın. Ayarlar environment variable'lar üzerinden yapılır:
 
-| Değişken | Varsayılan | Hot-reload | Açıklama |
-|---|---|---|---|
-| `PORT` | `8080` | Hayır | API'nin dinleyeceği port. Yalnızca başlangıçta okunur. |
-| `SERVER_LOCATION` | `Unknown` | Evet | Response içindeki sunucu lokasyonu. Boşluklar `_` karakterine çevrilir. |
-| `BTK_DNS_SERVERS` | `195.175.39.39,195.175.39.40` | Evet | Virgülle ayrılmış DNS sunucuları. Port belirtilmezse `:53` eklenir. |
-| `BTK_BLOCKED_IPS` | `195.175.254.2,2a01:358:4014:a00::3` | Evet | Virgülle ayrılmış engel IPv4 ve IPv6 adresleri. |
+| Değişken          | Varsayılan                           | Hot-reload | Açıklama                                                                |
+|-------------------|--------------------------------------|------------|-------------------------------------------------------------------------|
+| `PORT`            | `8080`                               | Hayır      | API'nin dinleyeceği port. Yalnızca başlangıçta okunur.                  |
+| `SERVER_LOCATION` | `Unknown`                            | Evet       | Response içindeki sunucu lokasyonu. Boşluklar `_` karakterine çevrilir. |
+| `BTK_DNS_SERVERS` | `195.175.39.39,195.175.39.40`        | Evet       | Virgülle ayrılmış DNS sunucuları. Port belirtilmezse `:53` eklenir.     |
+| `BTK_BLOCKED_IPS` | `195.175.254.2,2a01:358:4014:a00::3` | Evet       | Virgülle ayrılmış engel IPv4 ve IPv6 adresleri.                         |
 
 `.env` dosyası iki saniyede bir kontrol edilir. `BTK_DNS_SERVERS`, `BTK_BLOCKED_IPS` veya `SERVER_LOCATION` değiştiğinde yeni değerler otomatik yüklenir. `PORT` değişikliği için uygulamayı yeniden başlatmak gerekir.
 
@@ -166,10 +166,10 @@ sudo nano /opt/btk-sorgu-go/.env
 
 Unit dosyasını oluşturun (`/etc/systemd/system/btk-sorgu.service`). Dağıtıma göre kullanıcı ve `ProtectSystem` değeri değişir:
 
-| Dağıtım | User | ProtectSystem | ReadWritePaths |
-|---|---|---|---|
-| Ubuntu / Debian | `www-data` | `strict` | `/opt/btk-sorgu-go` |
-| CentOS / RHEL / Rocky | `nobody` | `full` | (kullanılmaz) |
+| Dağıtım               | User       | ProtectSystem | ReadWritePaths      |
+|-----------------------|------------|---------------|---------------------|
+| Ubuntu / Debian       | `www-data` | `strict`      | `/opt/btk-sorgu-go` |
+| CentOS / RHEL / Rocky | `nobody`   | `full`        | (kullanılmaz)       |
 
 ```ini
 [Unit]
@@ -223,19 +223,19 @@ sudo journalctl -u btk-sorgu -f
 
 Linux ve macOS'ta `make`, Windows'ta `build.bat` kullanın. Yerel geliştirme tüm platformlarda mümkündür; yalnızca release artefaktları Linux'a özeldir.
 
-| Komut | Açıklama |
-|---|---|
-| `make build` | `bin/btk-sorgu_<GOOS>_<GOARCH>` binary'sini oluşturur. |
-| `make run` | Build alır ve API sunucusunu başlatır. |
-| `make test` | Tüm Go testlerini çalıştırır. |
-| `make test-race` | Race detector ile test çalıştırır. |
-| `make test-cover` | Coverage ile test çalıştırır. |
-| `make test-verbose` | Testleri ayrıntılı çıktıyla çalıştırır. |
-| `make bench` | Benchmark testlerini çalıştırır. |
-| `make fmt` | Go dosyalarını formatlar. |
-| `make vet` | `go vet ./...` çalıştırır. |
-| `make lint` | Önce `go fmt ./...`, sonra `go vet ./...` çalıştırır. Kaynak dosyalarını değiştirebilir. |
-| `make clean` | Build çıktısını kaldırır ve `go clean` çalıştırır. |
+| Komut               | Açıklama                                                                                 |
+|---------------------|------------------------------------------------------------------------------------------|
+| `make build`        | `bin/btk-sorgu_<GOOS>_<GOARCH>` binary'sini oluşturur.                                   |
+| `make run`          | Build alır ve API sunucusunu başlatır.                                                   |
+| `make test`         | Tüm Go testlerini çalıştırır.                                                            |
+| `make test-race`    | Race detector ile test çalıştırır.                                                       |
+| `make test-cover`   | Coverage ile test çalıştırır.                                                            |
+| `make test-verbose` | Testleri ayrıntılı çıktıyla çalıştırır.                                                  |
+| `make bench`        | Benchmark testlerini çalıştırır.                                                         |
+| `make fmt`          | Go dosyalarını formatlar.                                                                |
+| `make vet`          | `go vet ./...` çalıştırır.                                                               |
+| `make lint`         | Önce `go fmt ./...`, sonra `go vet ./...` çalıştırır. Kaynak dosyalarını değiştirebilir. |
+| `make clean`        | Build çıktısını kaldırır ve `go clean` çalıştırır.                                       |
 
 Windows'ta eşdeğer komutlar `build.bat build`, `build.bat run`, `build.bat help` biçimindedir. Tek bir testi çalıştırmak için `go test -run '^TestName$' .` kullanın.
 
