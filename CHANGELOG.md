@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-07-25
+
+### Added
+- Automated Linux installer (install.sh) with nginx reverse proxy, firewall, and optional Let's Encrypt TLS
+
+### Changed
+- Make install.sh the single source for the systemd unit (remove static service files)
+- Move installer to repo root and merge docs into a single README
+- Restrict release builds to Linux (amd64, arm64)
+- Localize make and build.bat help output to Turkish
+
 ## [1.0.3] - 2026-07-25
 
 ### Changed
