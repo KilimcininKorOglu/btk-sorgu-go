@@ -197,7 +197,7 @@ func checkDomain(domain string) DNSResponse {
 		return response
 	}
 
-	// Domain temizleme (http://, https://, www. vs. kaldır)
+	// Domain temizleme (http://, https:// ve path kaldırılır, www. korunur)
 	domain = cleanDomain(domain)
 	response.Domain = domain
 
@@ -290,7 +290,8 @@ func checkIfBlocked(ips []string, blockedIPs []string) (bool, string) {
 	return false, ""
 }
 
-// cleanDomain domain'den protokol ve www önekini temizler
+// cleanDomain domain'den protokol ve path bölümünü temizler.
+// www. öneki korunur: www'li ve www'siz form ayrı DNS kayıtları olup ayrı sorgulanabilmelidir.
 func cleanDomain(domain string) string {
 	domain = strings.TrimSpace(domain)
 	lower := strings.ToLower(domain)
@@ -298,10 +299,6 @@ func cleanDomain(domain string) string {
 		domain = domain[len("https://"):]
 	} else if strings.HasPrefix(lower, "http://") {
 		domain = domain[len("http://"):]
-	}
-	// www. önekini büyük/küçük harf duyarsız ayıkla
-	if len(domain) >= 4 && strings.EqualFold(domain[:4], "www.") {
-		domain = domain[4:]
 	}
 	domain = strings.TrimSuffix(domain, "/")
 

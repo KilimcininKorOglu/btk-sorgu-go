@@ -19,7 +19,7 @@ Türkiye'de BTK (Bilgi Teknolojileri ve İletişim Kurumu) DNS yanıtlarına gö
 
 BTK tarafından engellenen domainler, BTK DNS sunucuları üzerinden çözümlendiğinde yapılandırılmış engel IP adreslerine yönlendirilebilir. API şu akışı izler:
 
-1. Domain girdisinden `http://`, `https://`, `www.` ve path bölümünü temizler.
+1. Domain girdisinden `http://`, `https://` ve path bölümünü temizler. `www.` öneki korunur; `www.example.com` ile `example.com` ayrı DNS kayıtları olarak ayrı sorgulanabilir.
 2. Domain formatını kontrol eder.
 3. Yapılandırılmış DNS sunucularını sırayla dener.
 4. Dönen IPv4 ve IPv6 adreslerini `BTK_BLOCKED_IPS` listesiyle karşılaştırır.
