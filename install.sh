@@ -7,7 +7,7 @@
 #
 # Usage:
 #   sudo ./install.sh [VERSION]
-#   curl -fsSL <raw-url>/install/install.sh | sudo bash
+#   curl -fsSL <raw-url>/install.sh | sudo bash
 #
 # Environment variables (optional, enable non-interactive runs):
 #   VERSION     Release tag to install (e.g. v1.0.3). Empty = latest.
