@@ -445,10 +445,11 @@ func main() {
 	mux.HandleFunc("/config", handleConfig)
 
 	server := &http.Server{
-		Addr:         ":" + port,
-		Handler:      mux,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		Addr:        ":" + port,
+		Handler:     mux,
+		ReadTimeout: 10 * time.Second,
+		// En kötü durumda 2 DNS sunucusu x 5s = 10s; encode ve network yazımı için marj bırak
+		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
