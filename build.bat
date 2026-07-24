@@ -1,6 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
 
+:: Use UTF-8 so Turkish help output renders correctly
+chcp 65001 >nul
+
 set BINARY_NAME=btk-sorgu
 set BUILD_DIR=bin
 
@@ -68,18 +71,18 @@ goto %~1
     goto end
 
 :help
-    echo Available commands:
-    echo   build        - Build the binary to bin\
-    echo   clean        - Remove build artifacts
-    echo   test         - Run all tests
-    echo   test-race    - Run tests with race detector
-    echo   test-cover   - Run tests with coverage
-    echo   test-verbose - Run tests with verbose output
-    echo   bench        - Run benchmarks
-    echo   run          - Build and run the server
-    echo   fmt          - Format code
-    echo   vet          - Run go vet
-    echo   lint         - Run fmt and vet
+    echo Kullanılabilir komutlar:
+    echo   build        - Binary'yi bin\ dizinine derler
+    echo   clean        - Build çıktısını kaldırır
+    echo   test         - Tüm testleri çalıştırır
+    echo   test-race    - Testleri race detector ile çalıştırır
+    echo   test-cover   - Testleri coverage ile çalıştırır
+    echo   test-verbose - Testleri ayrıntılı çıktıyla çalıştırır
+    echo   bench        - Benchmark'ları çalıştırır
+    echo   run          - Derler ve sunucuyu başlatır
+    echo   fmt          - Kodu formatlar
+    echo   vet          - go vet çalıştırır
+    echo   lint         - fmt ve vet çalıştırır
     goto end
 
 :end
