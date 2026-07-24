@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-07-24
+
+### Changed
+- Adopt `any` alias and `strings.SplitSeq` per go vet modernize hints
+- Pin GitHub Actions to commit SHAs
+- Note reverse-proxy rate limiting for /check in README
+- Update and restructure installation and README documentation
+
+### Fixed
+- Log JSON encode errors in all handlers
+- Strip www prefix case-insensitively in cleanDomain
+- Return generic DNS failure message to clients
+- Widen server WriteTimeout to cover worst-case DNS latency
+- Cap POST body size with http.MaxBytesReader
+
 ## [1.0.1] - 2026-03-21
 
 ### Added
