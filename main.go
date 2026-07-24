@@ -80,14 +80,14 @@ func (c *Config) loadConfig() error {
 	if dnsServers := os.Getenv("BTK_DNS_SERVERS"); dnsServers != "" {
 		servers := parseCommaSeparated(dnsServers)
 		if len(servers) > 0 {
-			// Port ekle (yoksa)
+			// Append port (if missing)
 			for i, server := range servers {
 				if _, _, err := net.SplitHostPort(server); err != nil {
 					if strings.Contains(server, ":") {
-						// IPv6 adresi, port yok
+						// IPv6 address without a port
 						servers[i] = "[" + server + "]:53"
 					} else {
-						// IPv4 adresi, port yok
+						// IPv4 address without a port
 						servers[i] = server + ":53"
 					}
 				}
@@ -96,7 +96,7 @@ func (c *Config) loadConfig() error {
 		}
 	}
 
-	// Engelli IP'ler
+	// Blocked IPs
 	if blockedIPs := os.Getenv("BTK_BLOCKED_IPS"); blockedIPs != "" {
 		ips := parseCommaSeparated(blockedIPs)
 		if len(ips) > 0 {
@@ -190,7 +190,7 @@ func checkDomain(domain string) DNSResponse {
 		Timestamp: time.Now().Unix(),
 	}
 
-	// Domain validasyonu
+	// Domain validation
 	if domain == "" {
 		response.Success = false
 		response.Error = "Domain parametresi boş olamaz"
@@ -201,7 +201,7 @@ func checkDomain(domain string) DNSResponse {
 	domain = cleanDomain(domain)
 	response.Domain = domain
 
-	// Domain format validasyonu
+	// Domain format validation
 	if !isValidDomain(domain) {
 		response.Success = false
 		response.Error = "Geçersiz domain formatı"
@@ -247,7 +247,7 @@ func checkDomain(domain string) DNSResponse {
 
 	processingTime := time.Since(startTime)
 
-	// Ek bilgiler
+	// Additional info
 	response.QueryTime = time.Now().Format("15:04:05.000")
 	response.ResponseTimeMs = float64(processingTime.Microseconds()) / 1000.0
 	response.ServerLocation = config.GetServerLocation()
@@ -356,7 +356,7 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 
 	response := checkDomain(domain)
 
-	// Hata durumunda uygun HTTP status code
+	// Appropriate HTTP status code on error
 	if !response.Success {
 		w.WriteHeader(http.StatusBadRequest)
 	}
