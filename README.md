@@ -209,43 +209,56 @@ sudo DOMAIN=sorgu.example.com EMAIL=admin@example.com ENABLE_SSL=1 bash install.
 
 ## Linux systemd Kurulumu (Manuel)
 
-Hazır service dosyaları `install/` klasöründedir. Önce Linux binary'sini oluşturun veya release paketinden temin edin.
-
-### Ubuntu / Debian
+`install/install.sh` systemd unit'ini otomatik üretir ve tek doğruluk kaynağıdır. Script kullanmadan elle kurmak isterseniz binary'yi yerleştirip aşağıdaki unit şablonunu kullanın. `<arch>` değerini mimarinize göre `amd64` veya `arm64` yapın.
 
 ```bash
 sudo mkdir -p /opt/btk-sorgu-go
-sudo cp bin/btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
+sudo cp bin/btk-sorgu_linux_<arch> /opt/btk-sorgu-go/
 sudo cp .env.example /opt/btk-sorgu-go/.env
-sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
+sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_<arch>
 sudo nano /opt/btk-sorgu-go/.env
-
-sudo cp install/btk-sorgu.service.ubuntu /etc/systemd/system/btk-sorgu.service
-sudo systemctl daemon-reload
-sudo systemctl enable btk-sorgu
-sudo systemctl start btk-sorgu
 ```
 
-### CentOS / RHEL / Rocky Linux
+Unit dosyasını oluşturun (`/etc/systemd/system/btk-sorgu.service`). Ubuntu/Debian için `User=www-data` ve `ProtectSystem=strict` (+ `ReadWritePaths=/opt/btk-sorgu-go`); CentOS/RHEL/Rocky için `User=nobody` ve `ProtectSystem=full` kullanın:
 
-```bash
-sudo mkdir -p /opt/btk-sorgu-go
-sudo cp bin/btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
-sudo cp .env.example /opt/btk-sorgu-go/.env
-sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
-sudo nano /opt/btk-sorgu-go/.env
+```ini
+[Unit]
+Description=BTK Engel Kontrol API
+After=network-online.target
+Wants=network-online.target
 
-sudo cp install/btk-sorgu.service.centos /etc/systemd/system/btk-sorgu.service
-sudo systemctl daemon-reload
-sudo systemctl enable btk-sorgu
-sudo systemctl start btk-sorgu
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/btk-sorgu-go
+ExecStart=/opt/btk-sorgu-go/btk-sorgu_linux_<arch>
+Restart=always
+RestartSec=5
+EnvironmentFile=/opt/btk-sorgu-go/.env
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/btk-sorgu-go
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=btk-sorgu
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-SELinux etkinse gerekebilecek izinler:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now btk-sorgu
+```
+
+SELinux etkinse (CentOS/RHEL/Rocky) gerekebilecek izinler:
 
 ```bash
-sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu_linux_amd64"
-sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu_linux_amd64
+sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu_linux_<arch>"
+sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu_linux_<arch>
 ```
 
 Servis yönetimi:

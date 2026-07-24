@@ -16,56 +16,31 @@ Belirli sürüm: `sudo bash install.sh v1.0.2`. Let's Encrypt TLS için:
 sudo DOMAIN=sorgu.example.com EMAIL=admin@example.com ENABLE_SSL=1 bash install.sh
 ```
 
-Aşağıdaki manuel adımlar, script kullanmadan kurmak isteyenler için referanstır.
+Aşağıdaki manuel adımlar, script kullanmadan kurmak isteyenler için referanstır. systemd unit'i `install.sh` tarafından üretilir; elle kurulumda ana `README.md`'deki "Linux systemd Kurulumu (Manuel)" bölümündeki unit şablonunu kullanın. `<arch>` = `amd64` veya `arm64`.
 
 ## Ubuntu / Debian
 
-```bash
-# Binary'yi kopyala
-sudo mkdir -p /opt/btk-sorgu-go
-sudo cp btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
-sudo cp .env.example /opt/btk-sorgu-go/.env
-sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
+Binary'yi yerleştirin, `.env`'i hazırlayın, unit'i oluşturun (`User=www-data`, `ProtectSystem=strict`, `ReadWritePaths=/opt/btk-sorgu-go`):
 
-# .env dosyasını düzenle
+```bash
+sudo mkdir -p /opt/btk-sorgu-go
+sudo cp btk-sorgu_linux_<arch> /opt/btk-sorgu-go/
+sudo cp .env.example /opt/btk-sorgu-go/.env
+sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_<arch>
 sudo nano /opt/btk-sorgu-go/.env
 
-# Systemd servisini kur
-sudo cp install/btk-sorgu.service.ubuntu /etc/systemd/system/btk-sorgu.service
+# Unit şablonu için ana README'ye bakın, sonra:
 sudo systemctl daemon-reload
-sudo systemctl enable btk-sorgu
-sudo systemctl start btk-sorgu
-
-# Durum kontrolü
-sudo systemctl status btk-sorgu
-sudo journalctl -u btk-sorgu -f
+sudo systemctl enable --now btk-sorgu
 ```
 
 ## CentOS / RHEL / Rocky Linux
 
+Ubuntu ile aynı; unit'te `User=nobody` ve `ProtectSystem=full` kullanın. SELinux etkinse:
+
 ```bash
-# Binary'yi kopyala
-sudo mkdir -p /opt/btk-sorgu-go
-sudo cp btk-sorgu_linux_amd64 /opt/btk-sorgu-go/
-sudo cp .env.example /opt/btk-sorgu-go/.env
-sudo chmod +x /opt/btk-sorgu-go/btk-sorgu_linux_amd64
-
-# .env dosyasını düzenle
-sudo nano /opt/btk-sorgu-go/.env
-
-# Systemd servisini kur
-sudo cp install/btk-sorgu.service.centos /etc/systemd/system/btk-sorgu.service
-sudo systemctl daemon-reload
-sudo systemctl enable btk-sorgu
-sudo systemctl start btk-sorgu
-
-# SELinux izinleri (gerekirse)
-sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu_linux_amd64"
-sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu_linux_amd64
-
-# Durum kontrolü
-sudo systemctl status btk-sorgu
-sudo journalctl -u btk-sorgu -f
+sudo semanage fcontext -a -t bin_t "/opt/btk-sorgu-go/btk-sorgu_linux_<arch>"
+sudo restorecon -v /opt/btk-sorgu-go/btk-sorgu_linux_<arch>
 ```
 
 ## Servis Yönetimi
