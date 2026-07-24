@@ -18,17 +18,17 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Build değişkenleri (ldflags ile enjekte edilir)
+// Build variables (injected via ldflags)
 var (
 	version   = "dev"
 	commit    = "unknown"
 	buildDate = "unknown"
 )
 
-// RFC 1035 uyumlu domain validasyon regex'i (bir kez derlenir)
+// RFC 1035 compliant domain validation regex (compiled once)
 var domainRegex = regexp.MustCompile(`^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`)
 
-// Config uygulama konfigürasyonu (hot-reload destekli)
+// Config holds the application configuration (hot-reload supported)
 type Config struct {
 	mu             sync.RWMutex
 	DNSServers     []string
@@ -43,7 +43,7 @@ var config = &Config{
 	ServerLocation: "Unknown",
 }
 
-// GetDNSServers thread-safe DNS sunucu listesi
+// GetDNSServers returns the DNS server list in a thread-safe way
 func (c *Config) GetDNSServers() []string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -52,7 +52,7 @@ func (c *Config) GetDNSServers() []string {
 	return result
 }
 
-// GetBlockedIPs thread-safe engelli IP listesi
+// GetBlockedIPs returns the blocked IP list in a thread-safe way
 func (c *Config) GetBlockedIPs() []string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -61,22 +61,22 @@ func (c *Config) GetBlockedIPs() []string {
 	return result
 }
 
-// GetServerLocation thread-safe sunucu lokasyonu
+// GetServerLocation returns the server location in a thread-safe way
 func (c *Config) GetServerLocation() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.ServerLocation
 }
 
-// loadConfig .env dosyasından konfigürasyonu yükler
+// loadConfig loads configuration from the .env file
 func (c *Config) loadConfig() error {
-	// .env dosyasını yükle (varsa)
+	// Load the .env file (if present)
 	_ = godotenv.Overload()
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// DNS Sunucuları
+	// DNS servers
 	if dnsServers := os.Getenv("BTK_DNS_SERVERS"); dnsServers != "" {
 		servers := parseCommaSeparated(dnsServers)
 		if len(servers) > 0 {
@@ -104,7 +104,7 @@ func (c *Config) loadConfig() error {
 		}
 	}
 
-	// Sunucu Lokasyonu (boşlukları alt çizgiye çevir)
+	// Server location (convert spaces to underscores)
 	if location := os.Getenv("SERVER_LOCATION"); location != "" {
 		c.ServerLocation = strings.ReplaceAll(location, " ", "_")
 	}
@@ -112,7 +112,7 @@ func (c *Config) loadConfig() error {
 	return nil
 }
 
-// parseCommaSeparated virgülle ayrılmış string'i slice'a çevirir
+// parseCommaSeparated converts a comma-separated string into a slice
 func parseCommaSeparated(s string) []string {
 	var result []string
 	for item := range strings.SplitSeq(s, ",") {
@@ -124,9 +124,9 @@ func parseCommaSeparated(s string) []string {
 	return result
 }
 
-// watchConfigFile .env dosyasını izler ve değişikliklerde yeniden yükler
+// watchConfigFile watches the .env file and reloads on changes
 func watchConfigFile() {
-	// Panic recovery - goroutine çökerse logla
+	// Panic recovery - log if the goroutine crashes
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("[WARN] watchConfigFile panic: %v", r)
@@ -137,7 +137,7 @@ func watchConfigFile() {
 	envFile := ".env"
 	var lastModTime time.Time
 
-	// İlk mod time'ı al
+	// Get the initial mod time
 	if info, err := os.Stat(envFile); err == nil {
 		lastModTime = info.ModTime()
 	}
@@ -167,7 +167,7 @@ func watchConfigFile() {
 	}
 }
 
-// DNSResponse API response yapısı (sadeleştirilmiş, tekrarsız)
+// DNSResponse is the API response structure (simplified, no duplication)
 type DNSResponse struct {
 	Domain         string   `json:"domain"`
 	Timestamp      int64    `json:"timestamp"`
@@ -182,7 +182,7 @@ type DNSResponse struct {
 	ServerLocation string   `json:"server_location,omitempty"`
 }
 
-// checkDomain belirtilen domain'in BTK tarafından engellenip engellenmediğini kontrol eder
+// checkDomain checks whether the given domain is blocked by BTK
 func checkDomain(domain string) DNSResponse {
 	startTime := time.Now()
 	response := DNSResponse{
@@ -197,7 +197,7 @@ func checkDomain(domain string) DNSResponse {
 		return response
 	}
 
-	// Domain temizleme (http://, https:// ve path kaldırılır, www. korunur)
+	// Domain cleaning (http://, https:// and path removed, www. preserved)
 	domain = cleanDomain(domain)
 	response.Domain = domain
 
@@ -212,7 +212,7 @@ func checkDomain(domain string) DNSResponse {
 	var resolvedIPs []string
 	var usedServer string
 
-	// BTK DNS sunucularını dene (config'den al)
+	// Try the BTK DNS servers (from config)
 	for _, dnsServer := range config.GetDNSServers() {
 		ips, err := resolveDNS(domain, dnsServer)
 		if err != nil {
@@ -226,7 +226,7 @@ func checkDomain(domain string) DNSResponse {
 
 	if len(resolvedIPs) == 0 {
 		response.Success = false
-		// Ayrıntılı resolver hatasını yalnızca sunucuda logla, istemciye genel mesaj dön
+		// Log the detailed resolver error server-side only, return a generic message to the client
 		if lastError != nil {
 			log.Printf("[WARN] DNS çözümleme hatası (%s): %v", domain, lastError)
 		}
@@ -238,7 +238,7 @@ func checkDomain(domain string) DNSResponse {
 	response.DNSServer = strings.TrimSuffix(usedServer, ":53")
 	response.ResolvedIPs = resolvedIPs
 
-	// Engel kontrolü (config'den al)
+	// Block check (from config)
 	isBlocked, blockedIP := checkIfBlocked(resolvedIPs, config.GetBlockedIPs())
 	response.IsBlocked = isBlocked
 	if isBlocked {
@@ -255,7 +255,7 @@ func checkDomain(domain string) DNSResponse {
 	return response
 }
 
-// resolveDNS belirtilen DNS sunucusu üzerinden domain'i çözümler
+// resolveDNS resolves the domain through the given DNS server
 func resolveDNS(domain, dnsServer string) ([]string, error) {
 	resolver := &net.Resolver{
 		PreferGo: true,
@@ -278,7 +278,7 @@ func resolveDNS(domain, dnsServer string) ([]string, error) {
 	return ips, nil
 }
 
-// checkIfBlocked IP listesinde BTK engel IP'si var mı kontrol eder
+// checkIfBlocked checks whether the IP list contains a BTK block IP
 func checkIfBlocked(ips []string, blockedIPs []string) (bool, string) {
 	for _, ip := range ips {
 		for _, blockedIP := range blockedIPs {
@@ -290,8 +290,8 @@ func checkIfBlocked(ips []string, blockedIPs []string) (bool, string) {
 	return false, ""
 }
 
-// cleanDomain domain'den protokol ve path bölümünü temizler.
-// www. öneki korunur: www'li ve www'siz form ayrı DNS kayıtları olup ayrı sorgulanabilmelidir.
+// cleanDomain strips the protocol and path from the domain.
+// The www. prefix is preserved: www and non-www are separate DNS records that must be queryable independently.
 func cleanDomain(domain string) string {
 	domain = strings.TrimSpace(domain)
 	lower := strings.ToLower(domain)
@@ -309,7 +309,7 @@ func cleanDomain(domain string) string {
 	return domain
 }
 
-// isValidDomain domain formatının geçerli olup olmadığını kontrol eder
+// isValidDomain checks whether the domain format is valid
 func isValidDomain(domain string) bool {
 	if len(domain) == 0 || len(domain) > 253 {
 		return false
@@ -317,7 +317,7 @@ func isValidDomain(domain string) bool {
 	return domainRegex.MatchString(domain)
 }
 
-// handleCheck /check endpoint handler'ı
+// handleCheck is the /check endpoint handler
 func handleCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -335,10 +335,10 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Domain string `json:"domain"`
 		}
-		// İstek gövdesini 1 KB ile sınırla (bellek tüketimini önle)
+		// Limit the request body to 1 KB (prevent memory exhaustion)
 		r.Body = http.MaxBytesReader(w, r.Body, 1024)
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			// JSON parse hatası - kullanıcıya bildir
+			// JSON parse error - notify the user
 			if domain == "" {
 				response := DNSResponse{
 					Timestamp: time.Now().Unix(),
@@ -366,7 +366,7 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleHealth /health endpoint handler'ı
+// handleHealth is the /health endpoint handler
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -379,7 +379,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleConfig /config endpoint handler'ı - güncel konfigürasyonu gösterir
+// handleConfig is the /config endpoint handler - shows the current configuration
 func handleConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if err := json.NewEncoder(w).Encode(map[string]any{
@@ -392,7 +392,7 @@ func handleConfig(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleRoot / endpoint handler'ı
+// handleRoot is the / endpoint handler
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if r.URL.Path != "/" {
@@ -426,21 +426,21 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// --version flag kontrolü
+	// --version flag check
 	if len(os.Args) > 1 && os.Args[1] == "--version" {
 		fmt.Printf("btk-sorgu %s (commit: %s, built: %s)\n", version, commit, buildDate)
 		return
 	}
 
-	// Konfigürasyonu yükle
+	// Load configuration
 	if err := config.loadConfig(); err != nil {
 		log.Printf("[WARN] Konfigürasyon yükleme hatası: %v", err)
 	}
 
-	// Hot-reload için file watcher başlat
+	// Start the file watcher for hot-reload
 	go watchConfigFile()
 
-	// Port (sadece başlangıçta okunur, hot-reload desteklemez)
+	// Port (read only at startup, does not support hot-reload)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -456,12 +456,12 @@ func main() {
 		Addr:        ":" + port,
 		Handler:     mux,
 		ReadTimeout: 10 * time.Second,
-		// En kötü durumda 2 DNS sunucusu x 5s = 10s; encode ve network yazımı için marj bırak
+		// Worst case is 2 DNS servers x 5s = 10s; leave margin for encoding and network write
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Graceful shutdown için signal handling
+	// Signal handling for graceful shutdown
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

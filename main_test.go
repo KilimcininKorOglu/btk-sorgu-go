@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// TestCleanDomain protokol, www ve path temizliğini doğrular
+// TestCleanDomain verifies protocol and path stripping while preserving www
 func TestCleanDomain(t *testing.T) {
 	cases := map[string]string{
 		"example.com":                  "example.com",
@@ -31,7 +31,7 @@ func TestCleanDomain(t *testing.T) {
 	}
 }
 
-// TestIsValidDomain RFC 1035 format ve uzunluk sınırını doğrular
+// TestIsValidDomain verifies RFC 1035 format and length limit
 func TestIsValidDomain(t *testing.T) {
 	valid := []string{"example.com", "a.io", "sub.example.co.uk", "xn--nxasmq6b.com", "blog.example.com", "api.v2.example.com", "a.b.c.d.example.com", "cdn-1.assets.example.io"}
 	for _, d := range valid {
@@ -47,7 +47,7 @@ func TestIsValidDomain(t *testing.T) {
 	}
 }
 
-// TestCheckIfBlocked engel IP eşleşmesini doğrular
+// TestCheckIfBlocked verifies blocked IP matching
 func TestCheckIfBlocked(t *testing.T) {
 	blocked := []string{"195.175.254.2", "2a01:358:4014:a00::3"}
 
@@ -65,7 +65,7 @@ func TestCheckIfBlocked(t *testing.T) {
 	}
 }
 
-// TestParseCommaSeparated boşluk temizleme ve boş öğe atlamayı doğrular
+// TestParseCommaSeparated verifies whitespace trimming and empty-item skipping
 func TestParseCommaSeparated(t *testing.T) {
 	cases := []struct {
 		in   string
@@ -93,7 +93,7 @@ func TestParseCommaSeparated(t *testing.T) {
 	}
 }
 
-// TestConfigGettersReturnCopy getter'ların savunmacı kopya döndürdüğünü doğrular
+// TestConfigGettersReturnCopy verifies getters return a defensive copy
 func TestConfigGettersReturnCopy(t *testing.T) {
 	c := &Config{
 		DNSServers:     []string{"1.1.1.1:53"},
@@ -115,7 +115,7 @@ func TestConfigGettersReturnCopy(t *testing.T) {
 	}
 }
 
-// TestLoadConfigPortNormalization DNS portu ekleme ve IPv6 bracket'lemeyi doğrular
+// TestLoadConfigPortNormalization verifies DNS port appending and IPv6 bracketing
 func TestLoadConfigPortNormalization(t *testing.T) {
 	t.Setenv("BTK_DNS_SERVERS", "8.8.8.8, 9.9.9.9:5353, 2001:4860:4860::8888")
 	t.Setenv("BTK_BLOCKED_IPS", "9.9.9.9")
@@ -141,7 +141,7 @@ func TestLoadConfigPortNormalization(t *testing.T) {
 	}
 }
 
-// TestHandleCheckEmptyDomain boş domain'in HTTP 400 döndürdüğünü doğrular
+// TestHandleCheckEmptyDomain verifies an empty domain returns HTTP 400
 func TestHandleCheckEmptyDomain(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/check", nil)
 	rec := httptest.NewRecorder()
@@ -159,7 +159,7 @@ func TestHandleCheckEmptyDomain(t *testing.T) {
 	}
 }
 
-// TestHandleCheckInvalidDomain geçersiz formatın HTTP 400 döndürdüğünü doğrular (DNS'e gitmez)
+// TestHandleCheckInvalidDomain verifies an invalid format returns HTTP 400 (no DNS call)
 func TestHandleCheckInvalidDomain(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/check?domain=not_a_valid_domain", nil)
 	rec := httptest.NewRecorder()
@@ -170,7 +170,7 @@ func TestHandleCheckInvalidDomain(t *testing.T) {
 	}
 }
 
-// TestHandleCheckOptionsCORS OPTIONS preflight'ın CORS header'larıyla 200 döndürdüğünü doğrular
+// TestHandleCheckOptionsCORS verifies OPTIONS preflight returns 200 with CORS headers
 func TestHandleCheckOptionsCORS(t *testing.T) {
 	req := httptest.NewRequest(http.MethodOptions, "/check", nil)
 	rec := httptest.NewRecorder()
@@ -184,7 +184,7 @@ func TestHandleCheckOptionsCORS(t *testing.T) {
 	}
 }
 
-// TestHandleCheckOversizedBody MaxBytesReader'ın büyük POST gövdesini reddettiğini doğrular (BUG-002)
+// TestHandleCheckOversizedBody verifies MaxBytesReader rejects a large POST body
 func TestHandleCheckOversizedBody(t *testing.T) {
 	big := `{"domain":"` + strings.Repeat("a", 2048) + `"}`
 	req := httptest.NewRequest(http.MethodPost, "/check", strings.NewReader(big))
@@ -197,7 +197,7 @@ func TestHandleCheckOversizedBody(t *testing.T) {
 	}
 }
 
-// TestHandleHealth /health'in healthy durum döndürdüğünü doğrular
+// TestHandleHealth verifies /health returns a healthy status
 func TestHandleHealth(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rec := httptest.NewRecorder()
@@ -215,7 +215,7 @@ func TestHandleHealth(t *testing.T) {
 	}
 }
 
-// TestHandleConfig /config'in aktif konfigürasyonu döndürdüğünü doğrular
+// TestHandleConfig verifies /config returns the active configuration
 func TestHandleConfig(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/config", nil)
 	rec := httptest.NewRecorder()
@@ -233,7 +233,7 @@ func TestHandleConfig(t *testing.T) {
 	}
 }
 
-// TestHandleRoot / kök yolun bilgi, bilinmeyen yolun 404 döndürdüğünü doğrular
+// TestHandleRoot verifies the root path returns info and an unknown path returns 404
 func TestHandleRoot(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
