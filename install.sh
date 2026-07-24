@@ -283,6 +283,8 @@ maybeSetupTLS() {
 		ensureCommand certbot certbot
 		DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3-certbot-nginx
 	else
+		# certbot lives in EPEL on the RHEL family; enable it first
+		"${PKG_MANAGER}" install -y -q epel-release || warn "epel-release kurulamadı, certbot bulunamayabilir."
 		ensureCommand certbot certbot
 		"${PKG_MANAGER}" install -y -q python3-certbot-nginx
 	fi
