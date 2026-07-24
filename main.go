@@ -373,22 +373,26 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":    "healthy",
 		"timestamp": time.Now().Unix(),
 		"version":   version,
-	})
+	}); err != nil {
+		log.Printf("JSON encode hatası: %v", err)
+	}
 }
 
 // handleConfig /config endpoint handler'ı - güncel konfigürasyonu gösterir
 func handleConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"dns_servers":     config.GetDNSServers(),
 		"blocked_ips":     config.GetBlockedIPs(),
 		"server_location": config.GetServerLocation(),
 		"hot_reload":      true,
-	})
+	}); err != nil {
+		log.Printf("JSON encode hatası: %v", err)
+	}
 }
 
 // handleRoot / endpoint handler'ı
@@ -396,12 +400,14 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if r.URL.Path != "/" {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
 			"error": "Not found",
-		})
+		}); err != nil {
+			log.Printf("JSON encode hatası: %v", err)
+		}
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"name":        "BTK Engel Kontrol API",
 		"version":     version,
 		"description": "Türkiye'de BTK tarafından engellenen domainleri kontrol eden API",
@@ -417,7 +423,9 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 			"config_file":        ".env",
 			"reload_interval_ms": 2000,
 		},
-	})
+	}); err != nil {
+		log.Printf("JSON encode hatası: %v", err)
+	}
 }
 
 func main() {
