@@ -11,15 +11,18 @@ import (
 // TestCleanDomain protokol, www ve path temizliğini doğrular
 func TestCleanDomain(t *testing.T) {
 	cases := map[string]string{
-		"example.com":              "example.com",
-		"https://example.com":      "example.com",
-		"http://example.com":       "example.com",
-		"www.example.com":          "www.example.com",
-		"https://www.example.com/": "www.example.com",
-		"HTTPS://WWW.Example.com":  "WWW.Example.com",
-		"WwW.test.org":             "WwW.test.org",
-		"http://discord.com/path":  "discord.com",
-		"  spaced.com  ":           "spaced.com",
+		"example.com":                  "example.com",
+		"https://example.com":          "example.com",
+		"http://example.com":           "example.com",
+		"www.example.com":              "www.example.com",
+		"https://www.example.com/":     "www.example.com",
+		"HTTPS://WWW.Example.com":      "WWW.Example.com",
+		"WwW.test.org":                 "WwW.test.org",
+		"http://discord.com/path":      "discord.com",
+		"  spaced.com  ":               "spaced.com",
+		"blog.example.com":             "blog.example.com",
+		"https://api.v2.example.com/x": "api.v2.example.com",
+		"www.sub.example.com":          "www.sub.example.com",
 	}
 	for in, want := range cases {
 		if got := cleanDomain(in); got != want {
@@ -30,7 +33,7 @@ func TestCleanDomain(t *testing.T) {
 
 // TestIsValidDomain RFC 1035 format ve uzunluk sınırını doğrular
 func TestIsValidDomain(t *testing.T) {
-	valid := []string{"example.com", "a.io", "sub.example.co.uk", "xn--nxasmq6b.com"}
+	valid := []string{"example.com", "a.io", "sub.example.co.uk", "xn--nxasmq6b.com", "blog.example.com", "api.v2.example.com", "a.b.c.d.example.com", "cdn-1.assets.example.io"}
 	for _, d := range valid {
 		if !isValidDomain(d) {
 			t.Errorf("isValidDomain(%q) = false, want true", d)
