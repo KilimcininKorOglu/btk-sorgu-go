@@ -226,11 +226,11 @@ func checkDomain(domain string) DNSResponse {
 
 	if len(resolvedIPs) == 0 {
 		response.Success = false
+		// Ayrıntılı resolver hatasını yalnızca sunucuda logla, istemciye genel mesaj dön
 		if lastError != nil {
-			response.Error = fmt.Sprintf("DNS çözümlemesi başarısız: %v", lastError)
-		} else {
-			response.Error = "DNS çözümlemesi başarısız: IP adresi bulunamadı"
+			log.Printf("[WARN] DNS çözümleme hatası (%s): %v", domain, lastError)
 		}
+		response.Error = "DNS çözümlemesi başarısız"
 		return response
 	}
 
