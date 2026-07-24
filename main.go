@@ -335,6 +335,8 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Domain string `json:"domain"`
 		}
+		// İstek gövdesini 1 KB ile sınırla (bellek tüketimini önle)
+		r.Body = http.MaxBytesReader(w, r.Body, 1024)
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			// JSON parse hatası - kullanıcıya bildir
 			if domain == "" {
