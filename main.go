@@ -115,7 +115,7 @@ func (c *Config) loadConfig() error {
 // parseCommaSeparated virgülle ayrılmış string'i slice'a çevirir
 func parseCommaSeparated(s string) []string {
 	var result []string
-	for _, item := range strings.Split(s, ",") {
+	for item := range strings.SplitSeq(s, ",") {
 		item = strings.TrimSpace(item)
 		if item != "" {
 			result = append(result, item)
@@ -373,7 +373,7 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]any{
 		"status":    "healthy",
 		"timestamp": time.Now().Unix(),
 		"version":   version,
@@ -385,7 +385,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 // handleConfig /config endpoint handler'ı - güncel konfigürasyonu gösterir
 func handleConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]any{
 		"dns_servers":     config.GetDNSServers(),
 		"blocked_ips":     config.GetBlockedIPs(),
 		"server_location": config.GetServerLocation(),
@@ -400,14 +400,14 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if r.URL.Path != "/" {
 		w.WriteHeader(http.StatusNotFound)
-		if err := json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]any{
 			"error": "Not found",
 		}); err != nil {
 			log.Printf("JSON encode hatası: %v", err)
 		}
 		return
 	}
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]any{
 		"name":        "BTK Engel Kontrol API",
 		"version":     version,
 		"description": "Türkiye'de BTK tarafından engellenen domainleri kontrol eden API",
@@ -418,7 +418,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		},
 		"dns_servers": config.GetDNSServers(),
 		"blocked_ips": config.GetBlockedIPs(),
-		"features": map[string]interface{}{
+		"features": map[string]any{
 			"hot_reload":         true,
 			"config_file":        ".env",
 			"reload_interval_ms": 2000,
