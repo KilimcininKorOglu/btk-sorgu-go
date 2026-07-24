@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-07-25
+
+### Fixed
+- Enable EPEL before installing certbot on RHEL-family distros
+- Keep installation running over HTTP when certbot fails instead of aborting
+
 ## [1.0.4] - 2026-07-25
 
 ### Added
