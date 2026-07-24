@@ -185,7 +185,29 @@ make build
 ./bin/btk-sorgu_<os>_<arch> --version
 ```
 
-## Linux systemd Kurulumu
+## Otomatik Kurulum (Linux)
+
+`install/install.sh`, en son release'i indirir, `/opt/btk-sorgu-go` altına kurar, systemd servisini başlatır, nginx reverse proxy'yi (80 -> 127.0.0.1:8080) yapılandırır ve firewall'da 80/443 portlarını açar. Servis portu (8080) yalnızca localhost'ta dinler. Ubuntu/Debian (ufw) ve RHEL/CentOS/Rocky (firewalld) desteklenir.
+
+Güvenlik için script'i indirip inceledikten sonra çalıştırın:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/KilimcininKorOglu/btk-sorgu-go/master/install/install.sh
+less install.sh
+sudo bash install.sh
+```
+
+Belirli bir sürüm için argüman verin: `sudo bash install.sh v1.0.2`
+
+Non-interaktif kurulum ve Let's Encrypt TLS için environment değişkenleri:
+
+```bash
+sudo DOMAIN=sorgu.example.com EMAIL=admin@example.com ENABLE_SSL=1 bash install.sh
+```
+
+`ENABLE_SSL=1` ve `DOMAIN` verildiğinde certbot ile 443 ve otomatik yenileme etkinleştirilir. Interaktif çalıştırmada script HTTPS kurulumunu sorar.
+
+## Linux systemd Kurulumu (Manuel)
 
 Hazır service dosyaları `install/` klasöründedir. Önce Linux binary'sini oluşturun veya release paketinden temin edin.
 

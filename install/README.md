@@ -1,5 +1,23 @@
 # Kurulum Rehberi
 
+## Otomatik Kurulum
+
+Tek komutla indirme, kurulum, systemd servisi, nginx reverse proxy ve firewall (80/443) için `install.sh` kullanın. Servis portu (8080) yalnızca localhost'ta kalır.
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/KilimcininKorOglu/btk-sorgu-go/master/install/install.sh
+less install.sh
+sudo bash install.sh
+```
+
+Belirli sürüm: `sudo bash install.sh v1.0.2`. Let's Encrypt TLS için:
+
+```bash
+sudo DOMAIN=sorgu.example.com EMAIL=admin@example.com ENABLE_SSL=1 bash install.sh
+```
+
+Aşağıdaki manuel adımlar, script kullanmadan kurmak isteyenler için referanstır.
+
 ## Ubuntu / Debian
 
 ```bash
