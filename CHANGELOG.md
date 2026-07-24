@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2026-07-25
+
+### Changed
+- Translate all code comments to English (log and user-facing strings stay Turkish)
+- Add unit tests for core functions, config, and handlers
+- Cover subdomain preservation and validation in cleanDomain
+
+### Fixed
+- Preserve www prefix in cleanDomain so www and non-www are queried as separate DNS records
+
 ## [1.0.2] - 2026-07-24
 
 ### Changed
