@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.6] - 2026-07-27
+
+### Fixed
+- Handle JSON encode error in the invalid-body path and annotate false-positive log-injection warnings
+
 ## [1.0.5] - 2026-07-25
 
 ### Fixed
