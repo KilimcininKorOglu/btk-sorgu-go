@@ -226,9 +226,10 @@ func checkDomain(domain string) DNSResponse {
 
 	if len(resolvedIPs) == 0 {
 		response.Success = false
-		// Log the detailed resolver error server-side only, return a generic message to the client
+		// Log the detailed resolver error server-side only, return a generic message to the client.
+		// domain is already validated by isValidDomain (RFC 1035 regex), which rejects CR/LF and control chars.
 		if lastError != nil {
-			log.Printf("[WARN] DNS çözümleme hatası (%s): %v", domain, lastError)
+			log.Printf("[WARN] DNS çözümleme hatası (%s): %v", domain, lastError) // #nosec G706 -- domain is RFC 1035 validated, no CR/LF possible
 		}
 		response.Error = "DNS çözümlemesi başarısız"
 		return response
@@ -346,7 +347,9 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 					Error:     "Geçersiz JSON formatı: " + err.Error(),
 				}
 				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(response)
+				if err := json.NewEncoder(w).Encode(response); err != nil {
+					log.Printf("JSON encode hatası: %v", err)
+				}
 				return
 			}
 		} else if domain == "" {
@@ -478,7 +481,7 @@ func main() {
 	}()
 
 	log.Println("[INFO] BTK Engel Kontrol API başlatıldı")
-	log.Printf("[INFO] Dinleniyor: http://localhost:%s", port)
+	log.Printf("[INFO] Dinleniyor: http://localhost:%s", port) // #nosec G706 -- port is operator-controlled config from the PORT env var, not client input
 	log.Println("[INFO] Endpoint: GET /check?domain=example.com")
 	log.Println("[INFO] Hot-reload: .env dosyası değişikliklerini otomatik algılar")
 	log.Printf("[INFO] Konfigürasyon:")
