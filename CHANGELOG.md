@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.7] - 2026-07-27
+
+### Changed
+- Bump Go floor to 1.26.5 to clear called stdlib CVEs
+
 ## [1.0.6] - 2026-07-27
 
 ### Fixed
